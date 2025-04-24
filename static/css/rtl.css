@@ -1,0 +1,4 @@
+x/* Add specific RTL overrides if needed, although text-align: right should work */
+th, td {
+    text-align: right !important; /* Force right alignment */
+}
