@@ -1,0 +1,282 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}الدعم الفني{% endblock %}
+
+{% block main_content %}
+<div class="card">
+    <div class="card-header-with-actions">
+        <h3>تذاكر الدعم الفني</h3>
+        <a href="{{ url_for('student_new_ticket') }}" class="btn primary">تذكرة جديدة</a>
+    </div>
+    
+    <div class="card-body">
+        {% if tickets %}
+            <div class="table-container">
+                <table class="full-width-table">
+                    <thead>
+                        <tr>
+                            <th>رقم التذكرة</th>
+                            <th>الموضوع</th>
+                            <th>التاريخ</th>
+                            <th>آخر تحديث</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets|sort(attribute='created_at', reverse=true) %}
+                            <tr>
+                                <td>{{ ticket.ticket_id }}</td>
+                                <td>{{ ticket.subject }}</td>
+                                <td>{{ ticket.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if ticket.messages %}
+                                        {{ ticket.messages[-1].created_at.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        {{ ticket.created_at.strftime('%Y-%m-%d') }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge 
+                                        {% if ticket.status == 'Open' %}red
+                                        {% elif ticket.status == 'In Progress' %}yellow
+                                        {% elif ticket.status == 'Closed' %}green
+                                        {% endif %}">
+                                        {% if ticket.status == 'Open' %}مفتوحة
+                                        {% elif ticket.status == 'In Progress' %}قيد المعالجة
+                                        {% elif ticket.status == 'Closed' %}مغلقة
+                                        {% else %}{{ ticket.status }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('student_ticket_detail', ticket_id=ticket.id) }}" class="btn-link">
+                                        <i class="fas fa-eye"></i> عرض التفاصيل
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-10">
+                <p class="text-muted mb-4">لم تقم بإنشاء أي تذاكر دعم فني حتى الآن.</p>
+                <a href="{{ url_for('student_new_ticket') }}" class="btn primary">إنشاء تذكرة</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h3>الأسئلة الشائعة</h3>
+    </div>
+    
+    <div class="card-body">
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    كم تستغرق عملية التقديم؟
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>تستغرق عملية التقديم عادةً من أسبوع إلى أسبوعين من وقت تقديم جميع المستندات المطلوبة. بعد التحقق من المستندات، سيتم إخطارك للمتابعة مع عملية الدفع. بمجرد استلام الدفع، سيتم إنشاء معرف الطالب الخاص بك في غضون 3 أيام عمل.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    ما هي المستندات التي أحتاج إلى تقديمها؟
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>تحتاج إلى تقديم المستندات التالية:</p>
+                    <ul class="mr-6" style="list-style-type: disc;">
+                        <li>شهادة البكالوريوس</li>
+                        <li>السجل الأكاديمي</li>
+                        <li>بطاقة الهوية أو جواز السفر</li>
+                        <li>السيرة الذاتية</li>
+                        <li>صورة شخصية حديثة</li>
+                    </ul>
+                    <p>قد تكون هناك مستندات إضافية مطلوبة اعتمادًا على البرنامج الذي تتقدم إليه.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    كيف أدفع رسوم التقديم؟
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>بعد التحقق من المستندات الخاصة بك، ستتلقى إشعارًا لإجراء الدفع. يمكنك الدفع باستخدام بطاقة ائتمان أو بطاقة خصم من خلال بوابة الدفع الآمنة على البوابة الإلكترونية. الرسوم هي 600 جنيه مصري للطلاب المصريين و 1500 جنيه مصري للطلاب الدوليين.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    كيف أطلب شهادة؟
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك طلب شهادة من خلال قسم الشهادات في البوابة. حدد نوع الشهادة التي تحتاجها، وقدم أي تفاصيل ضرورية، وأرسل الطلب. رسوم الشهادة هي 200 جنيه مصري لكل شهادة. بعد الدفع، تستغرق المعالجة عادة من 1 إلى 3 أيام عمل.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    ماذا لو تم رفض مستنداتي؟
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>إذا تم رفض مستنداتك، ستتلقى إشعارًا يشرح السبب. يمكنك تحميل مستندات جديدة أو مصححة من خلال قسم المستندات في البوابة. تشمل الأسباب الشائعة للرفض سوء جودة الصورة، أو معلومات غير مكتملة، أو مستندات مفقودة.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header">
+        <h3>معلومات الاتصال</h3>
+    </div>
+    
+    <div class="card-body">
+        <div class="contact-info">
+            <div class="contact-item">
+                <i class="fas fa-phone contact-icon"></i>
+                <div>
+                    <h4>الدعم الهاتفي</h4>
+                    <p>+20 2 1234 5678</p>
+                    <p class="text-muted">من الأحد إلى الخميس، 9:00 صباحًا حتى 4:00 مساءً</p>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <i class="fas fa-envelope contact-icon"></i>
+                <div>
+                    <h4>الدعم عبر البريد الإلكتروني</h4>
+                    <p>support@university.edu.eg</p>
+                    <p class="text-muted">الرد عادة خلال 24 ساعة</p>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt contact-icon"></i>
+                <div>
+                    <h4>مكتب الإدارة</h4>
+                    <p>مبنى الإدارة، غرفة 102</p>
+                    <p class="text-muted">من الأحد إلى الخميس، 9:00 صباحًا حتى 3:00 مساءً</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    function toggleFAQ(element) {
+        const answer = element.nextElementSibling;
+        const icon = element.querySelector('i');
+        
+        if (answer.style.maxHeight) {
+            answer.style.maxHeight = null;
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        } else {
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        }
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* FAQ Styles */
+    .faq-container {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .faq-item {
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+    
+    .faq-question {
+        padding: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
+    }
+    
+    .faq-question:hover {
+        background-color: #f9fafb;
+    }
+    
+    .faq-answer {
+        padding: 0 1rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+    
+    .faq-answer p,
+    .faq-answer ul {
+        padding-bottom: 1rem;
+    }
+    
+    /* Contact Info Styles */
+    .contact-info {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media (min-width: 768px) {
+        .contact-info {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+    }
+    
+    .contact-icon {
+        font-size: 1.5rem;
+        color: #4f46e5;
+        margin-left: 1rem; /* تغيير من margin-right إلى margin-left للدعم العربي */
+        margin-top: 0.25rem;
+    }
+    
+    .contact-item h4 {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .contact-item p {
+        margin-bottom: 0.25rem;
+    }
+
+    /* تحسينات إضافية للدعم العربي */
+    .faq-answer ul {
+        padding-inline-start: 20px;
+    }
+</style>
+{% endblock %}

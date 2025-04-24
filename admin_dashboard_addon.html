@@ -1,0 +1,159 @@
+<!-- أضف هذا داخل قالب لوحة تحكم المشرف في المكان المناسب -->
+<div class="card mb-4">
+    <div class="card-header-with-actions">
+        <h5 class="mb-0">إدارة البرامج</h5>
+        <div class="header-actions">
+            <button id="validate-programs-btn" class="btn btn-sm btn-info">
+                <i class="fas fa-check-circle me-1"></i>التحقق من البرامج
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <button id="populate-statistics-btn" class="btn btn-primary mb-3 w-100">
+                    <i class="fas fa-chart-bar ms-2"></i>إضافة برامج الإحصاء
+                </button>
+                <small class="text-muted d-block">يضيف جميع برامج ومقررات الإحصاء إلى قاعدة البيانات.</small>
+            </div>
+            <div class="col-md-6">
+                <button id="populate-all-programs-btn" class="btn btn-success mb-3 w-100">
+                    <i class="fas fa-graduation-cap ms-2"></i>إضافة جميع البرامج
+                </button>
+                <small class="text-muted d-block">يضيف جميع البرامج المتاحة من الملف النصي إلى قاعدة البيانات.</small>
+            </div>
+        </div>
+
+        <div id="program-count" class="mt-4 p-3 border rounded bg-light text-end">
+            جارٍ تحميل إحصائيات البرامج...
+        </div>
+    </div>
+</div>
+
+<script>
+// أضف هذا إلى قسم JavaScript الخاص بك
+document.addEventListener('DOMContentLoaded', function() {
+    const populateStatisticsBtn = document.getElementById('populate-statistics-btn');
+    const populateAllProgramsBtn = document.getElementById('populate-all-programs-btn');
+    const validateProgramsBtn = document.getElementById('validate-programs-btn');
+    const programCount = document.getElementById('program-count');
+
+    // وظيفة للحصول على إحصائيات البرامج
+    function getProgramStats() {
+        fetch('/api/programs')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // الحصول على أنواع الدرجات الفريدة
+                    const degreeTypes = [...new Set(data.programs.map(p => p.degree_type))];
+
+                    // حساب البرامج حسب نوع الدرجة
+                    let statsHTML = '<h6>البرامج المتاحة:</h6>';
+
+                    degreeTypes.forEach(degree => {
+                        const count = data.programs.filter(p => p.degree_type === degree).length;
+                        statsHTML += `<p><strong>${degree}:</strong> ${count} برامج</p>`;
+                    });
+
+                    // العدد الإجمالي
+                    statsHTML += `<p><strong>الإجمالي:</strong> ${data.programs.length} برامج</p>`;
+
+                    programCount.innerHTML = statsHTML;
+                } else {
+                    programCount.innerHTML = '<div class="alert alert-warning">فشل تحميل إحصائيات البرامج</div>';
+                }
+            })
+            .catch(error => {
+                console.error('خطأ:', error);
+                programCount.innerHTML = '<div class="alert alert-danger">خطأ في تحميل إحصائيات البرامج</div>';
+            });
+    }
+
+    // الحصول على إحصائيات البرامج الأولية
+    getProgramStats();
+
+    // التعامل مع زر إضافة برامج الإحصاء
+    if (populateStatisticsBtn) {
+        populateStatisticsBtn.addEventListener('click', function() {
+            populateStatisticsBtn.disabled = true;
+            populateStatisticsBtn.innerHTML = '<i class="fas fa-spinner fa-spin ms-2"></i>جارٍ المعالجة...';
+
+            fetch('/admin/populate-statistics', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('تمت إضافة برامج الإحصاء بنجاح!');
+                    getProgramStats(); // تحديث إحصائيات البرامج
+                } else {
+                    toastr.error('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                toastr.error('خطأ: ' + error);
+            })
+            .finally(() => {
+                populateStatisticsBtn.disabled = false;
+                populateStatisticsBtn.innerHTML = '<i class="fas fa-chart-bar ms-2"></i>إضافة برامج الإحصاء';
+            });
+        });
+    }
+
+    // التعامل مع زر إضافة جميع البرامج
+    if (populateAllProgramsBtn) {
+        populateAllProgramsBtn.addEventListener('click', function() {
+            populateAllProgramsBtn.disabled = true;
+            populateAllProgramsBtn.innerHTML = '<i class="fas fa-spinner fa-spin ms-2"></i>جارٍ المعالجة...';
+
+            fetch('/admin/populate-additional', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('تمت إضافة جميع البرامج بنجاح!');
+                    getProgramStats(); // تحديث إحصائيات البرامج
+                } else {
+                    toastr.error('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                toastr.error('خطأ: ' + error);
+            })
+            .finally(() => {
+                populateAllProgramsBtn.disabled = false;
+                populateAllProgramsBtn.innerHTML = '<i class="fas fa-graduation-cap ms-2"></i>إضافة جميع البرامج';
+            });
+        });
+    }
+
+    // التعامل مع زر التحقق من البرامج
+    if (validateProgramsBtn) {
+        validateProgramsBtn.addEventListener('click', function() {
+            validateProgramsBtn.disabled = true;
+            validateProgramsBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جارٍ التحقق...';
+
+            fetch('/admin/validate-programs', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message);
+                    getProgramStats(); // تحديث إحصائيات البرامج
+                } else {
+                    toastr.error('خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                toastr.error('خطأ: ' + error);
+            })
+            .finally(() => {
+                validateProgramsBtn.disabled = false;
+                validateProgramsBtn.innerHTML = '<i class="fas fa-check-circle me-1"></i>التحقق من البرامج';
+            });
+        });
+    }
+});
+</script>

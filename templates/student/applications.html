@@ -1,0 +1,428 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}طلباتي{% endblock %}
+
+{% block main_content %}
+<div class="card">
+    <div class="card-header-with-actions">
+        <h3>طلباتي</h3>
+        <a href="{{ url_for('student_new_application') }}" class="btn primary">تقديم طلب جديد</a>
+    </div>
+    
+    <div class="card-body">
+        {% if applications %}
+            <div class="table-container">
+                <table class="full-width-table">
+                    <thead>
+                        <tr>
+                            <th>رقم الطلب</th>
+                            <th>البرنامج</th>
+                            <th>تاريخ التقديم</th>
+                            <th>الحالة</th>
+                            <th>حالة الدفع</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for application in applications|sort(attribute='date_submitted', reverse=true) %}
+                            <tr>
+                                <td>{{ application.app_id }}</td>
+                                <td>{{ application.program }}</td>
+                                <td>{{ application.date_submitted.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <span class="status-badge 
+                                        {% if application.status == 'Pending Review' %}yellow
+                                        {% elif application.status == 'Documents Approved' %}green
+                                        {% elif application.status == 'Documents Rejected' %}red
+                                        {% elif application.status == 'Enrolled' %}blue
+                                        {% endif %}">
+                                        {% if application.status == 'Pending Review' %}
+                                            قيد المراجعة
+                                        {% elif application.status == 'Documents Approved' %}
+                                            تمت الموافقة على المستندات
+                                        {% elif application.status == 'Documents Rejected' %}
+                                            تم رفض المستندات
+                                        {% elif application.status == 'Enrolled' %}
+                                            تم التسجيل
+                                        {% else %}
+                                            {{ application.status }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge 
+                                        {% if application.payment_status == 'Pending' %}yellow
+                                        {% elif application.payment_status == 'Paid' %}green
+                                        {% endif %}">
+                                        {% if application.payment_status == 'Pending' %}
+                                            معلق
+                                        {% elif application.payment_status == 'Paid' %}
+                                            مدفوع
+                                        {% else %}
+                                            {{ application.payment_status }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <a href="#" class="action-btn view-app-btn" data-id="{{ application.id }}">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                    
+                                    {% if application.status == 'Documents Approved' and application.payment_status == 'Pending' %}
+                                        <a href="{{ url_for('student_payment', app_id=application.id) }}" class="action-btn">
+                                            <i class="fas fa-credit-card"></i> دفع
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-10">
+                <p class="text-muted mb-4">لم تقم بتقديم أي طلبات حتى الآن.</p>
+                <a href="{{ url_for('student_new_application') }}" class="btn primary">تقديم طلب جديد</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Application Detail Modal -->
+<div id="application-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تفاصيل الطلب</h3>
+            <button class="close-modal btn-icon">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div id="application-details">
+                <div class="info-row">
+                    <span class="info-label">رقم الطلب:</span>
+                    <span id="app-id" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">البرنامج:</span>
+                    <span id="app-program" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">تاريخ التقديم:</span>
+                    <span id="app-date" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الحالة:</span>
+                    <span id="app-status" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">حالة الدفع:</span>
+                    <span id="app-payment" class="info-value"></span>
+                </div>
+                
+                <!-- Document requirements container -->
+                <div id="document-requirements" class="document-requirements mb-4">
+                    <h5 class="mb-2">المستندات المطلوبة:</h5>
+                    <div id="required-documents-list" class="required-documents-list">
+                        <!-- Required documents will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Documents for this application -->
+                <h4 class="mt-6 mb-3">المستندات المرفقة</h4>
+                <div id="document-list" class="document-list">
+                    <!-- Uploaded documents will be inserted here by JavaScript -->
+                </div>
+                
+                <!-- Missing documents section -->
+                <div id="missing-documents" class="mt-4">
+                    <h5 class="text-danger mb-2">المستندات المفقودة:</h5>
+                    <ul id="missing-documents-list" class="missing-documents-list">
+                        <!-- Missing documents will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn primary close-modal">إغلاق</button>
+            <div id="modal-actions">
+                <!-- Additional actions will be shown here based on application status -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // View application details
+        const viewButtons = document.querySelectorAll('.view-app-btn');
+        const modal = document.getElementById('application-modal');
+        const closeButtons = document.querySelectorAll('.close-modal');
+        
+        // Application details elements
+        const appId = document.getElementById('app-id');
+        const appProgram = document.getElementById('app-program');
+        const appDate = document.getElementById('app-date');
+        const appStatus = document.getElementById('app-status');
+        const appPayment = document.getElementById('app-payment');
+        const documentList = document.getElementById('document-list');
+        const requiredDocumentsList = document.getElementById('required-documents-list');
+        const missingDocumentsList = document.getElementById('missing-documents-list');
+        const documentRequirements = document.getElementById('document-requirements');
+        const missingDocumentsSection = document.getElementById('missing-documents');
+        const modalActions = document.getElementById('modal-actions');
+        
+        console.log('Initializing view buttons:', viewButtons.length);
+        
+        // Throttle function to prevent multiple rapid clicks
+        let isProcessing = false;
+        
+        if (viewButtons.length > 0) {
+            viewButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop event propagation
+                    
+                    // Throttle to prevent multiple rapid clicks
+                    if (isProcessing) {
+                        console.log('Already processing a request, ignoring click');
+                        return;
+                    }
+                    
+                    isProcessing = true;
+                    setTimeout(() => { isProcessing = false; }, 1000); // Reset after 1 second
+                    
+                    const applicationId = this.getAttribute('data-id');
+                    console.log('View button clicked for application ID:', applicationId);
+                    
+                    // Reset modal content
+                    appId.textContent = 'جاري التحميل...';
+                    appProgram.textContent = 'جاري التحميل...';
+                    appDate.textContent = 'جاري التحميل...';
+                    appStatus.textContent = '';
+                    appPayment.textContent = '';
+                    documentList.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><span>جاري التحميل...</span></div>';
+                    
+                    // Force modal to be visible
+                    document.body.classList.add('modal-open'); // Add class to body to help with styling
+                    modal.style.display = 'flex';
+                    modal.classList.remove('hidden');
+                    
+                    // Fetch application details
+                    fetch(`/student/application/${applicationId}/details`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`خطأ في الاستجابة: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                const app = data.application;
+                                
+                                // Set application details
+                                appId.textContent = app.app_id;
+                                appProgram.textContent = app.program;
+                                appDate.textContent = app.date;
+                                
+                                // Translate status text
+                                let statusText = app.status;
+                                let statusClass = '';
+                                
+                                if (app.status === 'Pending Review') {
+                                    statusText = 'قيد المراجعة';
+                                    statusClass = 'yellow';
+                                } else if (app.status === 'Documents Approved') {
+                                    statusText = 'تمت الموافقة على المستندات';
+                                    statusClass = 'green';
+                                } else if (app.status === 'Documents Rejected') {
+                                    statusText = 'تم رفض المستندات';
+                                    statusClass = 'red';
+                                } else if (app.status === 'Enrolled') {
+                                    statusText = 'تم التسجيل';
+                                    statusClass = 'blue';
+                                }
+                                
+                                appStatus.innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+                                
+                                // Translate payment status
+                                let paymentText = app.payment_status;
+                                let paymentClass = '';
+                                
+                                if (app.payment_status === 'Pending') {
+                                    paymentText = 'معلق';
+                                    paymentClass = 'yellow';
+                                } else if (app.payment_status === 'Paid') {
+                                    paymentText = 'مدفوع';
+                                    paymentClass = 'green';
+                                }
+                                
+                                appPayment.innerHTML = `<span class="status-badge ${paymentClass}">${paymentText}</span>`;
+                                
+                                // Show documents
+                                documentList.innerHTML = '';
+                                
+                                if (data.documents && data.documents.length > 0) {
+                                    data.documents.forEach(doc => {
+                                        let statusClass = '';
+                                        let statusText = '';
+                                        
+                                        if (doc.status === 'Uploaded') {
+                                            statusClass = 'blue';
+                                            statusText = 'تم الرفع';
+                                        } else if (doc.status === 'Verified') {
+                                            statusClass = 'green';
+                                            statusText = 'تم التحقق';
+                                        } else if (doc.status === 'Rejected') {
+                                            statusClass = 'red';
+                                            statusText = 'مرفوض';
+                                        }
+                                        
+                                        const docItem = document.createElement('div');
+                                        docItem.className = 'document-item';
+                                        docItem.innerHTML = `
+                                            <div class="document-info">
+                                                <span class="document-name">${doc.name}</span>
+                                                <span class="document-date">تم الرفع: ${doc.uploaded_at}</span>
+                                            </div>
+                                            <div class="document-actions">
+                                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                                <a href="/static/${doc.file_path}" target="_blank" class="action-btn">
+                                                    <i class="fas fa-eye"></i> عرض
+                                                </a>
+                                            </div>
+                                        `;
+                                        documentList.appendChild(docItem);
+                                    });
+                                } else {
+                                    documentList.innerHTML = '<p class="text-muted text-center py-4">لم يتم رفع أي مستندات لهذا الطلب.</p>';
+                                }
+                                
+                                // Show missing documents
+                                const requiredDocuments = getRequiredDocuments(app.program, data.user_info);
+                                const missingDocs = getMissingDocuments(requiredDocuments, data.documents);
+                                
+                                if (missingDocs.length > 0) {
+                                    missingDocumentsSection.classList.remove('hidden');
+                                    missingDocumentsList.innerHTML = '';
+                                    
+                                    missingDocs.forEach(doc => {
+                                        const li = document.createElement('li');
+                                        li.className = 'missing-document';
+                                        li.innerHTML = `
+                                            <span>${doc.name}</span>
+                                            <a href="/student/documents/upload?type=${doc.type}&app_id=${applicationId}" class="action-btn small">
+                                                <i class="fas fa-upload"></i> رفع
+                                            </a>
+                                        `;
+                                        missingDocumentsList.appendChild(li);
+                                    });
+                                } else {
+                                    missingDocumentsSection.classList.add('hidden');
+                                }
+                                
+                                // Show modal actions based on status
+                                modalActions.innerHTML = '';
+                                
+                                if (app.status === 'Documents Approved' && app.payment_status === 'Pending') {
+                                    modalActions.innerHTML = `
+                                        <a href="/student/payments/${applicationId}" class="btn primary">
+                                            <i class="fas fa-credit-card"></i> دفع الرسوم
+                                        </a>
+                                    `;
+                                }
+
+                                // Ensure modal is visible
+                                if(modal.classList.contains('hidden')) {
+                                    console.log('Modal was hidden, removing hidden class');
+                                    modal.classList.remove('hidden');
+                                }
+                            } else {
+                                documentList.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${data.message || 'حدث خطأ أثناء جلب تفاصيل الطلب.'}</div>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error); // Debug log
+                            documentList.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${error.message || 'حدث خطأ أثناء الاتصال بالخادم.'}</div>`;
+                        });
+                });
+            });
+        } else {
+            console.warn('No view buttons found on this page.');
+        }
+        
+        // Close modal function to ensure consistent behavior
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        };
+        
+        // Close modal event listeners
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeModal();
+            });
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Function to check if a document is uploaded
+        function isDocumentUploaded(docType, uploadedDocs) {
+            if (!uploadedDocs || uploadedDocs.length === 0) return false;
+            return uploadedDocs.some(doc => doc.name.toLowerCase().includes(docType.toLowerCase()));
+        }
+        
+        // Function to get missing documents
+        function getMissingDocuments(requiredDocs, uploadedDocs) {
+            return requiredDocs.filter(doc => !isDocumentUploaded(doc.type, uploadedDocs));
+        }
+        
+        // Function to get required documents based on program and user info
+        function getRequiredDocuments(program, userInfo) {
+            const documents = [
+                { name: "صورة شخصية حديثة", type: "photo" }
+            ];
+            
+            // ID/Passport based on nationality
+            if (userInfo && userInfo.nationality === "Egyptian") {
+                documents.push({ name: "صورة بطاقة الهوية الوطنية (وجه وظهر)", type: "id" });
+                
+                // Military service document for Egyptian males
+                if (userInfo.gender === "male") {
+                    documents.push({ name: "شهادة الموقف من الخدمة العسكرية (تأجيل / إعفاء / إنهاء الخدمة)", type: "military" });
+                }
+            } else {
+                documents.push({ name: "صورة جواز السفر ساري المفعول", type: "passport" });
+            }
+            
+            // Degree-specific documents
+            if (program && program.toLowerCase().includes("phd")) {
+                documents.push({ name: "شهادة الماجستير", type: "master_degree" });
+                documents.push({ name: "كشف درجات الماجستير", type: "master_transcript" });
+            } else {
+                // Master's or Diploma
+                documents.push({ name: "شهادة البكالوريوس", type: "bachelor_degree" });
+                documents.push({ name: "كشف درجات البكالوريوس", type: "bachelor_transcript" });
+            }
+            
+            return documents;
+        }
+    });
+</script>
+{% endblock %}
+

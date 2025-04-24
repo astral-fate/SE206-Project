@@ -1,0 +1,146 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}طلب شهادة{% endblock %}
+
+{% block main_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>طلب شهادة</h3>
+    </div>
+    
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('student_request_certificate') }}">
+            {{ form.csrf_token }}
+            <div class="mb-3">
+                <label for="certificate_type" class="form-label">أنواع الشهادات</label>
+                <select class="form-select" id="certificate_type" name="certificate_type" required>
+                    <option value="">اختر نوع الشهادة</option>
+                    <option value="Transcript">شهادة كشف الدرجات</option>
+                    <option value="Completion">شهادة إكمال البرنامج</option>
+                    <option value="Enrollment">شهادة التحاق</option>
+                    <option value="Graduation">شهادة التخرج</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="purpose" class="form-label">الغرض</label>
+                <textarea class="form-control" id="purpose" name="purpose" rows="3" required></textarea>
+                <div class="form-text">يرجى توضيح سبب حاجتك لهذه الشهادة</div>
+            </div>
+            <div class="mb-3">
+                <label for="copies" class="form-label">عدد النسخ</label>
+                <input type="number" class="form-control" id="copies" name="copies" min="1" max="10" value="1" required>
+            </div>
+            <button type="submit" class="btn btn-primary">تقديم الطلب</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>معلومات الشهادة</h3>
+    </div>
+    
+    <div class="card-body">
+        <div id="certificate-details">
+            <p class="text-muted text-center">يرجى اختيار نوع الشهادة من الأعلى لعرض التفاصيل هنا</p>
+        </div>
+        
+        <div id="transcript-details" class="certificate-info hidden">
+            <h4>شهادة كشف الدرجات</h4>
+            <p class="mb-4">وثيقة رسمية تعرض سجلك الأكاديمي الكامل بما في ذلك المقررات والدرجات والمعدل التراكمي.</p>
+            
+            <div class="info-row">
+                <span class="info-label">وقت المعالجة:</span>
+                <span class="info-value">3-5 أيام عمل</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الرسوم:</span>
+                <span class="info-value">200 جنيه مصري للنسخة الواحدة</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الشكل:</span>
+                <span class="info-value">وثيقة رسمية مختومة</span>
+            </div>
+        </div>
+        
+        <div id="completion-details" class="certificate-info hidden">
+            <h4>شهادة إكمال البرنامج</h4>
+            <p class="mb-4">تؤكد الإكمال الناجح لبرنامج الدرجة العلمية أو مقررات محددة.</p>
+            
+            <div class="info-row">
+                <span class="info-label">وقت المعالجة:</span>
+                <span class="info-value">5-7 أيام عمل</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الرسوم:</span>
+                <span class="info-value">250 جنيه مصري للنسخة الواحدة</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الشكل:</span>
+                <span class="info-value">شهادة رسمية بختم الجامعة</span>
+            </div>
+        </div>
+        
+        <div id="enrollment-details" class="certificate-info hidden">
+            <h4>إثبات الالتحاق</h4>
+            <p class="mb-4">تؤكد وضعك الحالي كطالب مسجل في الجامعة.</p>
+            
+            <div class="info-row">
+                <span class="info-label">وقت المعالجة:</span>
+                <span class="info-value">1-3 أيام عمل</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الرسوم:</span>
+                <span class="info-value">150 جنيه مصري للنسخة الواحدة</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الشكل:</span>
+                <span class="info-value">خطاب رسمي</span>
+            </div>
+        </div>
+        
+        <div id="graduation-details" class="certificate-info hidden">
+            <h4>شهادة التخرج</h4>
+            <p class="mb-4">تؤكد تخرجك من الجامعة.</p>
+            
+            <div class="info-row">
+                <span class="info-label">وقت المعالجة:</span>
+                <span class="info-value">5-7 أيام عمل</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الرسوم:</span>
+                <span class="info-value">300 جنيه مصري للنسخة الواحدة</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">الشكل:</span>
+                <span class="info-value">شهادة رسمية بختم الجامعة</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Show certificate details based on selection
+    document.getElementById('certificate_type').addEventListener('change', function() {
+        const certificateValue = this.value.toLowerCase();
+        const certificateDetails = document.getElementById('certificate-details');
+        const certificateInfos = document.querySelectorAll('.certificate-info');
+        
+        // Hide all certificate info sections
+        certificateInfos.forEach(info => {
+            info.classList.add('hidden');
+        });
+        
+        // Show selected certificate info
+        if (certificateValue) {
+            const selectedInfo = document.getElementById(certificateValue + '-details');
+            if (selectedInfo) {
+                selectedInfo.classList.remove('hidden');
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends "admin_layout.html" %}
+
+{% block page_title %}لوحة تحكم مسؤول الشؤون الطلابية{% endblock %}
+
+{% block main_content %}
+<div class="stats-grid">
+    <!-- Stats cards row -->
+    <div class="stat-card">
+        <div class="stat-content">
+            <div>
+                <h3 class="stat-title">التقديمات الجديدة</h3>
+                <p class="stat-value">{{ applications_count }}</p>
+            </div>
+            <div class="stat-icon blue">
+                <i class="fas fa-file-alt"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <div>
+                <h3 class="stat-title">المدفوعات المعلقة</h3>
+                <p class="stat-value">{{ payment_pending_count }}</p>
+            </div>
+            <div class="stat-icon yellow">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-content">
+            <div>
+                <h3 class="stat-title">التذاكر المفتوحة</h3>
+                <p class="stat-value">{{ open_tickets }}</p>
+            </div>
+            <div class="stat-icon red">
+                <i class="fas fa-comment"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Grid -->
+<div class="dashboard-grid">
+    <!-- Recent Applications -->
+    <div class="card">
+        <div class="card-header">
+            <h3>التقديمات الأخيرة</h3>
+            <a href="{{ url_for('admin_applications') }}" class="view-all">عرض الكل</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>الاسم</th>
+                        <th>البرنامج</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent_applications %}
+                        <tr>
+                            <td>{{ app.app_id }}</td>
+                            <td>{{ app.user.full_name }}</td>
+                            <td>{{ app.program }}</td>
+                            <td>
+                                <span class="status-badge 
+                                    {% if app.status == 'Pending Review' %}yellow
+                                    {% elif app.status == 'Documents Approved' %}green
+                                    {% elif app.status == 'Documents Rejected' %}red
+                                    {% elif app.status == 'Payment Pending' %}blue
+                                    {% endif %}">
+                                    {{ app.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">لا توجد طلبات حالية</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Recent Support Tickets -->
+    <div class="card">
+        <div class="card-header">
+            <h3>التذاكر الأخيرة</h3>
+            <a href="{{ url_for('admin_tickets') }}" class="view-all">عرض الكل</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>الموضوع</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in recent_tickets %}
+                        <tr>
+                            <td>{{ ticket.ticket_id }}</td>
+                            <td>{{ ticket.subject }}</td>
+                            <td>
+                                <span class="status-badge 
+                                    {% if ticket.status == 'Open' %}red
+                                    {% elif ticket.status == 'In Progress' %}yellow
+                                    {% elif ticket.status == 'Closed' %}green
+                                    {% endif %}">
+                                    {{ ticket.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center">No recent tickets</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Certificates -->
+    <div class="card">
+        <div class="card-header">
+            <h3>طلبات الشهادة الأخيرة</h3>
+        </div>
+        <div class="card-body">
+            {% if recent_certificates %}
+                <ul class="recent-list">
+                    {% for certificate in recent_certificates %}
+                    <li class="recent-item">
+                        <div class="recent-item-header">
+                            <h4>{{ certificate.type }}</h4>
+                            <span class="status-badge 
+                                {% if certificate.status == 'Pending Payment' %}yellow
+                                {% elif certificate.status == 'Processing' %}blue
+                                {% elif certificate.status == 'Ready for Pickup' %}green
+                                {% endif %}">
+                                {{ certificate.status }}
+                            </span>
+                        </div>
+                        <p>Requested by: {{ certificate.user.full_name }}</p>
+                        <p>Requested on: {{ certificate.request_date|format_date }}</p>
+                        <div class="item-actions">
+                            <a href="{{ url_for('admin_certificates') }}?cert_id={{ certificate.cert_id }}" class="btn primary btn-sm">View Details</a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No recent certificate requests.</p>
+            {% endif %}
+            <div class="text-center mt-4">
+                <a href="{{ url_for('admin_certificates') }}" class="view-all-link">
+                    عرض جميع طلبات الشهادات
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
+
+<script>
+// View application details
+const viewButtons = document.querySelectorAll('[data-action="view"]');
+const modal = document.getElementById('application-modal');
+const modalTitle = document.getElementById('modal-title');
+const applicationDetails = document.getElementById('application-details');
+const documentList = document.getElementById('document-list');
+
+viewButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        const appId = this.dataset.id;
+        
+        // Show loading state
+        modalTitle.textContent = 'Loading Application Details...';
+        applicationDetails.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading application details...</p></div>';
+        documentList.innerHTML = '';
+        
+        // Fetch application details from API
+        fetch(`/admin/application/${appId}/details`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Set modal title
+                    modalTitle.textContent = `Application ${data.application.app_id}`;
+                    
+                    // Fill application details
+                    let detailsHtml = `
+                        <div class="app-details">
+                            <p><strong>Applicant:</strong> ${data.application.applicant}</p>
+                            <p><strong>Program:</strong> ${data.application.program}</p>
+                            <p><strong>Date Submitted:</strong> ${data.application.date}</p>
+                            <p><strong>Status:</strong> <span class="badge ${
+                                data.application.status === 'Documents Approved' ? 'bg-success' :
+                                data.application.status === 'Documents Rejected' ? 'bg-danger' :
+                                'bg-warning'
+                            }">${data.application.status}</span></p>
+                            <p><strong>Payment:</strong> <span class="badge ${
+                                data.application.payment === 'Paid' ? 'bg-success' : 'bg-warning'
+                            }">${data.application.payment}</span></p>
+                        </div>
+                    `;
+                    applicationDetails.innerHTML = detailsHtml;
+                    
+                    // Fill documents list
+                    if (data.documents && data.documents.length > 0) {
+                        let documentsHtml = '<ul class="document-list">';
+                        
+                        data.documents.forEach(doc => {
+                            const appIndicator = doc.application_id 
+                                ? (doc.application_id == appId ? '(This application)' : '(Other application)') 
+                                : '(General document)';
+                                
+                            documentsHtml += `
+                                <li class="document-item">
+                                    <div>
+                                        <strong>${doc.name}</strong>
+                                        <small class="text-muted">${appIndicator}</small>
+                                    </div>
+                                    <div class="document-meta">
+                                        <span>Uploaded: ${doc.uploaded_at}</span>
+                                        <span class="status-badge ${
+                                            doc.status === 'Verified' ? 'text-success' : 
+                                            doc.status === 'Rejected' ? 'text-danger' : 'text-primary'
+                                        }">
+                                            ${doc.status}
+                                        </span>
+                                        <a href="${doc.file_path}" target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View Document
+                                        </a>
+                                    </div>
+                                </li>
+                            `;
+                        });
+                        
+                        documentsHtml += '</ul>';
+                        documentList.innerHTML = documentsHtml;
+                    } else {
+                        documentList.innerHTML = '<p class="text-muted">No documents uploaded yet.</p>';
+                    }
+                } else {
+                    applicationDetails.innerHTML = `<div class="alert alert-danger">${data.message || 'Error fetching application details'}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                applicationDetails.innerHTML = '<div class="alert alert-danger">Error loading application details. Please try again.</div>';
+            });
+    });
+});
+
+// Populate statistics programs
+document.addEventListener('DOMContentLoaded', function() {
+    const populateBtn = document.getElementById('populate-statistics-btn');
+    if (populateBtn) {
+        populateBtn.addEventListener('click', function() {
+            populateBtn.disabled = true;
+            populateBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            
+            fetch('/admin/populate-statistics', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Statistics programs populated successfully!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            })
+            .finally(() => {
+                populateBtn.disabled = false;
+                populateBtn.innerHTML = '<i class="fas fa-database me-2"></i>Populate Statistics Programs';
+            });
+        });
+    }
+});
+</script>

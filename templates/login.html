@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Login - University Portal{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-box">
+        <div class="text-center mb-3">
+            <h2 class="fw-bold mb-1">تسجيل الدخول</h2>
+            <p class="text-muted small">مرحباً بك في بوابة الجامعة</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert {{ category }}">
+                        <p class="mb-0">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('login') }}" class="needs-validation" novalidate>
+            {{ form.csrf_token }}
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                <label for="email">
+                    <i class="fas fa-envelope me-2"></i>البريد الإلكتروني
+                </label>
+                <div class="invalid-feedback">
+                    يرجى إدخال بريد إلكتروني صحيح
+                </div>
+            </div>
+            
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="كلمة المرور" required>
+                <label for="password">
+                    <i class="fas fa-lock me-2"></i>كلمة المرور
+                </label>
+                <div class="invalid-feedback">
+                    يرجى إدخال كلمة المرور
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe" name="remember">
+                    <label class="form-check-label" for="rememberMe">تذكرني</label>
+                </div>
+                <a href="#" class="text-primary text-decoration-none">نسيت كلمة المرور؟</a>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                <i class="fas fa-sign-in-alt me-2"></i>دخول
+            </button>
+        </form>
+        
+        <div class="text-center">
+            <p class="text-muted small mb-0">
+                ليس لديك حساب؟ 
+                <a href="{{ url_for('register') }}" class="text-primary fw-bold text-decoration-none">سجل هنا</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    /* Reset and full-page styles */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    
+    /* Override any possible container styles from base template */
+    body > div, body > main, body > section {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+    
+    /* Full page background */
+    .login-page {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    
+    /* Login box styling */
+    .login-box {
+        width: 90%;
+        max-width: 400px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* RTL input styling */
+    .rtl-input-group {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .form-floating > label {
+        right: 0;
+        left: auto;
+        padding-right: 1rem;
+    }
+    
+    .form-floating > .form-control {
+        padding-right: 1rem;
+        padding-left: 3rem;
+    }
+    
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .btn-primary {
+        transition: all 0.3s ease;
+        background-color: #4a6cf7;
+        border-color: #4a6cf7;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
+        background-color: #3a5ce5;
+        border-color: #3a5ce5;
+    }
+    
+    /* Flash message styling */
+    .alert {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        text-align: right;
+        direction: rtl;
+    }
+    
+    .alert-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+    }
+    
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+    }
+    
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #664d03;
+        border: 1px solid #ffecb5;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Form validation
+    (function() {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+    })()
+    
+    // Force full page display
+    document.addEventListener('DOMContentLoaded', function() {
+        // Override any potential conflicting styles
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100%';
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.height = '100%';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}تذكرة #{{ ticket.ticket_id }}{% endblock %}
+
+{% block main_content %}
+<div class="card mb-6">
+    <div class="card-header-with-actions">
+        <div>
+            <h3>{{ ticket.subject }}</h3>
+            <p class="text-muted">رقم التذكرة: {{ ticket.ticket_id }}</p>
+        </div>
+        <span class="status-badge 
+            {% if ticket.status == 'Open' %}red
+            {% elif ticket.status == 'In Progress' %}yellow
+            {% elif ticket.status == 'Closed' %}green
+            {% endif %}">
+            {{ ticket.status }}
+        </span>
+    </div>
+    
+    <div class="card-body">
+        <div class="info-row">
+            <span class="info-label">تاريخ الإنشاء:</span>
+            <span class="info-value">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">آخر تحديث:</span>
+            <span class="info-value">
+                {% if ticket.messages %}
+                    {{ ticket.messages[-1].created_at.strftime('%Y-%m-%d %H:%M') }}
+                {% else %}
+                    {{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}
+                {% endif %}
+            </span>
+        </div>
+        {% if ticket.related_application %}
+            <div class="info-row">
+                <span class="info-label">طلب مرتبط:</span>
+                <span class="info-value">{{ ticket.related_application.app_id }} - {{ ticket.related_application.program }}</span>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="chat-container">
+            <div class="chat-messages">
+                {% for message in ticket.messages|sort(attribute='created_at') %}
+                <div class="chat-message {% if message.sender == 'Admin' %}incoming{% else %}outgoing{% endif %}">
+                    <div class="message-content">
+                        <p class="message-text">{{ message.message|nl2br }}</p>
+                        <p class="message-time">
+                            <span class="message-sender">{{ message.sender }}</span> - {{ message.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if ticket.status != 'Closed' %}
+            <form id="student-reply-form" class="chat-form" data-ticket-id="{{ ticket.id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" id="student-reply-message" name="message" placeholder="اكتب رسالتك هنا" required>
+                <button type="submit" class="btn primary">إرسال</button>
+            </form>
+            {% else %}
+            <div class="closed-ticket-message">
+                <p>تم إغلاق هذه التذكرة. لا يمكن إضافة المزيد من الردود.</p>
+                <button id="reopen-ticket" class="btn outline">إعادة فتح التذكرة</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="form-actions mt-4">
+    <a href="{{ url_for('student_support') }}" class="btn outline">العودة إلى التذاكر</a>
+    
+    {% if ticket.status != 'Closed' %}
+        <button id="close-ticket-btn" class="btn danger" data-id="{{ ticket.id }}">إغلاق التذكرة</button>
+    {% else %}
+        <a href="{{ url_for('student_new_ticket') }}" class="btn primary">إنشاء تذكرة جديدة</a>
+    {% endif %}
+</div>
+
+<!-- Close Ticket Confirmation Modal -->
+<div id="close-ticket-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تأكيد إغلاق التذكرة</h3>
+            <button class="close-modal btn-icon">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <p>هل أنت متأكد من أنك تريد إغلاق هذه التذكرة؟ لن تتمكن من إرسال المزيد من الردود بعد إغلاقها.</p>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn outline close-modal">إلغاء</button>
+            <form id="close-ticket-form" method="POST" action="{{ url_for('student_close_ticket', ticket_id=ticket.id) }}">
+                <button type="submit" class="btn primary">تأكيد الإغلاق</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Auto-scroll chat to bottom on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+    
+    // Handle ticket replies
+    const replyForm = document.getElementById('student-reply-form');
+    if (replyForm) {
+        replyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const ticketId = this.getAttribute('data-ticket-id');
+            const messageInput = document.getElementById('student-reply-message');
+            const message = messageInput.value.trim();
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+            
+            if (!message) return;
+            
+            // Disable form while sending
+            messageInput.disabled = true;
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            // Create form data with CSRF token
+            const formData = new FormData();
+            formData.append('message', message);
+            formData.append('csrf_token', csrfToken);
+            
+            fetch(`/student/support/reply/${ticketId}`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Add new message to chat
+                    const chatMessages = document.querySelector('.chat-messages');
+                    
+                    const newMessage = document.createElement('div');
+                    newMessage.className = 'chat-message outgoing';
+                    newMessage.innerHTML = `
+                        <div class="message-content">
+                            <p>${data.data.message}</p>
+                            <p class="message-time">${data.data.created_at} - ${data.data.sender}</p>
+                        </div>
+                    `;
+                    
+                    chatMessages.appendChild(newMessage);
+                    
+                    // Clear input and re-enable form
+                    messageInput.value = '';
+                    messageInput.disabled = false;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'إرسال';
+                    messageInput.focus();
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else {
+                    throw new Error(data.message || 'Failed to send message');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to send message. Please try again.');
+                messageInput.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'إرسال';
+            });
+        });
+    }
+    
+    // Close ticket modal
+    const closeTicketBtn = document.getElementById('close-ticket-btn');
+    const closeTicketModal = document.getElementById('close-ticket-modal');
+    const closeModalBtns = document.querySelectorAll('.close-modal');
+    
+    if (closeTicketBtn) {
+        closeTicketBtn.addEventListener('click', function() {
+            closeTicketModal.classList.remove('hidden');
+        });
+    }
+    
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            closeTicketModal.classList.add('hidden');
+        });
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(e) {
+        if (e.target === closeTicketModal) {
+            closeTicketModal.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .p-0 {
+        padding: 0 !important;
+    }
+    
+    .border-t {
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    /* Chat styles are already in the main CSS, but adding any specific overrides here */
+    .chat-container {
+        height: 400px; /* Fixed height for better UI */
+    }
+</style>
+{% endblock %}

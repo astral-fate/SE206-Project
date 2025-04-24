@@ -1,0 +1,84 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}الملف الشخصي{% endblock %}
+
+{% block main_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>المعلومات الشخصية</h3>
+    </div>
+    
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('student_update_profile') }}">
+            <div class="settings-grid">
+                <div class="settings-section">
+                    <div class="form-group">
+                        <label for="full_name">الاسم الكامل</label>
+                        <input type="text" id="full_name" name="full_name" class="form-input" 
+                               value="{{ current_user.full_name }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">البريد الإلكتروني</label>
+                        <input type="email" id="email" name="email" class="form-input" 
+                               value="{{ current_user.email }}" disabled>
+                        <p class="text-muted mt-1">لا يمكن تغيير عنوان البريد الإلكتروني</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">رقم الهاتف</label>
+                        <input type="tel" id="phone" name="phone" class="form-input" 
+                               value="{{ current_user.phone if current_user.phone else '' }}">
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="form-group">
+                        <label for="nationality">الجنسية</label>
+                        <select id="nationality" name="nationality" class="form-input" disabled>
+                            <option value="Egyptian" {% if current_user.nationality == 'Egyptian' %}selected{% endif %}>مصري</option>
+                            <option value="International" {% if current_user.nationality == 'International' %}selected{% endif %}>دولي</option>
+                        </select>
+                        <p class="text-muted mt-1">لا يمكن تغيير الجنسية</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="education">المستوى التعليمي</label>
+                        <select id="education" name="education" class="form-input" disabled>
+                            <option value="Bachelor's Degree" {% if current_user.education == 'Bachelor\'s Degree' %}selected{% endif %}>بكالوريوس</option>
+                            <option value="Master's Degree" {% if current_user.education == 'Master\'s Degree' %}selected{% endif %}>ماجستير</option>
+                            <option value="PhD" {% if current_user.education == 'PhD' %}selected{% endif %}>دكتوراه</option>
+                        </select>
+                        <p class="text-muted mt-1">لا يمكن تغيير المستوى التعليمي</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">العنوان</label>
+                        <textarea id="address" name="address" rows="3" class="form-input">{{ current_user.address if current_user.address else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn primary">حفظ التغييرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .settings-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}

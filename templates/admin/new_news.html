@@ -1,0 +1,132 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Add News/Announcement{% endblock %}
+
+{% block main_content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-gradient d-flex align-items-center justify-content-between">
+        <h3 class="m-0"><i class="fas fa-newspaper me-2"></i>Add News/Announcement</h3>
+        <a href="{{ url_for('admin_news') }}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to News
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin_news_add') }}" enctype="multipart/form-data" id="news-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-4">
+                        <label for="title" class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" id="title" name="title" required>
+                        <div class="form-text text-muted">Enter a descriptive title for this news/announcement</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-bold">Content <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                        <div class="form-text text-muted">Provide the full text content of your news or announcement</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="type" class="form-label fw-bold">Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="news">News</option>
+                            <option value="announcement">Announcement</option>
+                        </select>
+                        <div class="form-text text-muted">Categorize as either news or announcement</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="date" class="form-label fw-bold">Publication Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="date" name="date" required value="{{ now.strftime('%Y-%m-%d') }}">
+                        <div class="form-text text-muted">When should this item be published</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="m-0"><i class="fas fa-image me-2"></i>Featured Image</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                <div id="image-preview" class="mb-3">
+                                    <img src="{{ url_for('static', filename='img/news-placeholder.jpg') }}" 
+                                         class="img-fluid rounded" 
+                                         style="max-height: 200px; width: auto;" 
+                                         id="preview-img"
+                                         onerror="this.src='{{ url_for('static', filename='img/default-news.jpg') }}'">
+                                </div>
+                                <label for="image" class="form-label d-block">Upload Image</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text text-muted mt-2">
+                                    <small>Recommended size: 800x600px<br>Max size: 2MB<br>Formats: JPG, PNG, GIF</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="m-0"><i class="fas fa-cog me-2"></i>Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    <span class="fw-bold">Active</span><br>
+                                    <small class="text-muted">Item will be visible on the website</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
+                                <label class="form-check-label" for="is_featured">
+                                    <span class="fw-bold">Featured</span><br>
+                                    <small class="text-muted">Show on homepage featured section</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <hr>
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-save me-2"></i> Publish
+                    </button>
+                    <a href="{{ url_for('admin_news') }}" class="btn btn-outline-secondary btn-lg px-5 ms-2">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Image preview functionality
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        // Validate file size
+        const fileSize = file.size / 1024 / 1024; // Convert to MB
+        if (fileSize > 2) {
+            alert('Image file size must be less than 2MB');
+            this.value = ''; // Clear the file input
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

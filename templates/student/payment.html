@@ -1,0 +1,45 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}دفع الطلب{% endblock %}
+
+{% block main_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>دفع الطلب</h3>
+    </div>
+    
+    <div class="card-body">
+        <div class="payment-details">
+            <div class="info-group">
+                <label>رقم الطلب:</label>
+                <span>{{ application.app_id }}</span>
+            </div>
+            
+            <div class="info-group">
+                <label>البرنامج:</label>
+                <span>{{ application.program }}</span>
+            </div>
+            
+            <div class="info-group">
+                <label>إجمالي الرسوم:</label>
+                <span class="fee-amount">{{ fee }} جنيه</span>
+            </div>
+        </div>
+
+        <form method="POST" class="payment-form">
+            <!-- إضافة رمز CSRF -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="alert info">
+                <i class="fas fa-info-circle"></i>
+                <p>هذه محاكاة لعملية الدفع. في التطبيق الحقيقي، سيتم الاتصال ببوابة دفع.</p>
+            </div>
+
+            <button type="submit" class="btn success btn-block">
+                <i class="fas fa-check-circle"></i>
+                تأكيد الدفع
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

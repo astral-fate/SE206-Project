@@ -1,0 +1,214 @@
+{% extends "admin_layout.html" %}
+
+{% block page_title %}Student Courses{% endblock %}
+
+{% block main_content %}
+<div class="card mb-6">
+    <div class="card-header">
+        <h3>Student Information</h3>
+    </div>
+    
+    <div class="card-body">
+        <div class="info-row">
+            <span class="info-label">Name:</span>
+            <span class="info-value">{{ student.full_name }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Student ID:</span>
+            <span class="info-value">{{ student_id }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Program:</span>
+            <span class="info-value">{{ program }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ student.email }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Courses</h3>
+    </div>
+    
+    <div class="table-container">
+        <table class="full-width-table">
+            <thead>
+                <tr>
+                    <th>Course Code</th>
+                    <th>Title</th>
+                    <th>Semester</th>
+                    <th>Status</th>
+                    <th>Letter Grade</th>
+                    <th>Numerical Grade</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in courses %}
+                    <tr>
+                        <td>{{ item.course.code }}</td>
+                        <td>{{ item.course.title }}</td>
+                        <td>{{ item.semester }}</td>
+                        <td>{{ item.enrollment_status }}</td>
+                        <td>{{ item.grade or 'Not graded' }}</td>
+                        <td>{{ item.grade_numeric if item.grade_numeric != None else 'N/A' }}</td>
+                        <td>
+                            {% if item.enrollment_id %}
+                                <button type="button" class="btn primary" 
+                                        onclick="openGradeModal('{{ item.enrollment_id }}', '{{ item.course.title }}')">
+                                    Update Grade
+                                </button>
+                            {% else %}
+                                <form action="/admin/enroll_student" method="POST" class="inline-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="student_id" value="{{ student.id }}">
+                                    <input type="hidden" name="course_id" value="{{ item.course.id }}">
+                                    <button type="submit" class="btn outline">Enroll</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No courses found</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Grade Update Modal -->
+<div id="gradeModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
+    <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Update Grade</h3>
+            <span onclick="closeGradeModal()" style="cursor: pointer; font-size: 24px;">&times;</span>
+        </div>
+        
+        <form id="gradeForm" onsubmit="submitGradeForm(event)">
+            <input type="hidden" id="enrollmentId" name="enrollment_id">
+            <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div style="margin-bottom: 15px;">
+                <label for="courseTitle" style="display: block; margin-bottom: 5px; font-weight: bold;">Course:</label>
+                <div id="courseTitle" style="border: 1px solid #ddd; padding: 8px; background-color: #f8f8f8;"></div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label for="grade" style="display: block; margin-bottom: 5px; font-weight: bold;">Grade (0-100):</label>
+                <input type="number" id="grade" name="grade" style="width: 100%; padding: 8px;" required min="0" max="100" step="1">
+                <div id="grade-letter" style="margin-top: 5px; font-size: 0.9rem; color: #666;">Letter grade will appear here</div>
+            </div>
+            
+            <div style="text-align: right;">
+                <button type="button" onclick="closeGradeModal()" style="padding: 8px 15px; margin-right: 10px; background-color: #f8f8f8; border: 1px solid #ddd;">Cancel</button>
+                <button type="submit" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none;">Save Grade</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    function openGradeModal(enrollmentId, courseTitle) {
+        console.log('Opening modal for:', enrollmentId, courseTitle);
+        
+        // Set form values
+        document.getElementById('enrollmentId').value = enrollmentId;
+        document.getElementById('courseTitle').textContent = courseTitle;
+        document.getElementById('grade').value = '';
+        document.getElementById('grade-letter').textContent = 'Letter grade will appear here';
+        
+        // Show modal
+        document.getElementById('gradeModal').style.display = 'block';
+    }
+    
+    function closeGradeModal() {
+        document.getElementById('gradeModal').style.display = 'none';
+    }
+    
+    // Add event listener to update letter grade as user types
+    document.getElementById('grade').addEventListener('input', function() {
+        const numGrade = parseInt(this.value);
+        const letterElement = document.getElementById('grade-letter');
+        
+        if (isNaN(numGrade) || numGrade < 0 || numGrade > 100) {
+            letterElement.textContent = 'Please enter a valid number between 0-100';
+            return;
+        }
+        
+        let letterGrade;
+        if (numGrade >= 95) letterGrade = 'A+';
+        else if (numGrade >= 90) letterGrade = 'A';
+        else if (numGrade >= 85) letterGrade = 'A-';
+        else if (numGrade >= 80) letterGrade = 'B+';
+        else if (numGrade >= 75) letterGrade = 'B';
+        else if (numGrade >= 70) letterGrade = 'B-';
+        else if (numGrade >= 65) letterGrade = 'C+';
+        else if (numGrade >= 60) letterGrade = 'C';
+        else if (numGrade >= 55) letterGrade = 'C-';
+        else if (numGrade >= 50) letterGrade = 'D+';
+        else if (numGrade >= 45) letterGrade = 'D';
+        else letterGrade = 'F';
+        
+        letterElement.textContent = `Equivalent to letter grade: ${letterGrade}`;
+    });
+    
+    function submitGradeForm(event) {
+        event.preventDefault();
+        
+        const enrollmentId = document.getElementById('enrollmentId').value;
+        const grade = document.getElementById('grade').value;
+        const csrfToken = document.getElementById('csrf_token').value;
+        
+        // Validate grade
+        const numGrade = parseInt(grade);
+        if (isNaN(numGrade) || numGrade < 0 || numGrade > 100) {
+            alert('Please enter a valid grade between 0 and 100.');
+            return;
+        }
+        
+        console.log('Updating grade:', enrollmentId, grade);
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('enrollment_id', enrollmentId);
+        formData.append('grade', grade);
+        formData.append('csrf_token', csrfToken);
+        
+        // Send request to server
+        fetch('/admin/update_grade', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('Server response:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                alert('Grade updated successfully!');
+                closeGradeModal();
+                location.reload();
+            } else {
+                alert('Error updating grade: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update grade. See console for details.');
+        });
+    }
+</script>
+{% endblock %}

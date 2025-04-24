@@ -1,0 +1,157 @@
+{% extends "admin_layout.html" %}
+
+{% block page_title %}Add New Project{% endblock %}
+
+{% block main_content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-gradient d-flex align-items-center justify-content-between">
+        <h3 class="m-0"><i class="fas fa-plus-circle me-2"></i>Add New Project</h3>
+        <a href="{{ url_for('admin_projects') }}" class="btn btn-outline-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Projects
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin_new_project') }}" enctype="multipart/form-data" id="new-project-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-4">
+                        <label for="title" class="form-label fw-bold">Project Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" id="title" name="title" required>
+                        <div class="form-text text-muted">Choose a descriptive title for your project</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-bold">Project Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                        <div class="form-text text-muted">Provide detailed information about the project's goals, methods, and outcomes</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="category" class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">-- Select a Category --</option>
+                            <option value="Research">Academic Research</option>
+                            <option value="Development">Software Development</option>
+                            <option value="Innovation">Innovation & Entrepreneurship</option>
+                            <option value="Analysis">Data Analysis</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Social">Social Impact</option>
+                        </select>
+                        <div class="form-text text-muted">Choose the most relevant category for your project</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="url" class="form-label fw-bold">Project URL</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-link"></i></span>
+                            <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com/project">
+                        </div>
+                        <div class="form-text text-muted">Optional: Add a link to the project's website or repository</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="m-0"><i class="fas fa-image me-2"></i>Project Image</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3 text-center">
+                                <div id="image-preview" class="mb-3">
+                                    <img src="{{ url_for('static', filename='img/default-project.jpg') }}" 
+                                         class="img-fluid rounded" 
+                                         style="max-height: 200px; width: auto;" 
+                                         id="preview-img">
+                                </div>
+                                <label for="image" class="form-label d-block">Upload Image</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text text-muted mt-2">
+                                    <small>Recommended size: 800x600px<br>Max size: 2MB<br>Formats: JPG, PNG, GIF</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="m-0"><i class="fas fa-cog me-2"></i>Project Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    <span class="fw-bold">Active</span><br>
+                                    <small class="text-muted">Project will be visible on the website</small>
+                                </label>
+                            </div>
+                            
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_popular" name="is_popular">
+                                <label class="form-check-label" for="is_popular">
+                                    <span class="fw-bold">Featured</span><br>
+                                    <small class="text-muted">Show on homepage and featured sections</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <hr>
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="fas fa-save me-2"></i> Save Project
+                    </button>
+                    <a href="{{ url_for('admin_projects') }}" class="btn btn-outline-secondary btn-lg px-5 ms-2">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Image preview functionality
+document.getElementById('image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        // Validate file size
+        const fileSize = file.size / 1024 / 1024; // Convert to MB
+        if (fileSize > 2) {
+            alert('Image file size must be less than 2MB');
+            this.value = ''; // Clear the file input
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Form validation
+document.getElementById('new-project-form').addEventListener('submit', function(e) {
+    // Additional validation can be added here
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    
+    if (title.length < 3) {
+        e.preventDefault();
+        alert('Project title must be at least 3 characters long');
+        return;
+    }
+    
+    if (description.length < 10) {
+        e.preventDefault();
+        alert('Please provide a more detailed project description');
+        return;
+    }
+});
+</script>
+{% endblock %}

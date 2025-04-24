@@ -1,0 +1,706 @@
+{% extends "admin_layout.html" %}
+
+{% block page_title %}Student Enrollments{% endblock %}
+
+{% block main_content %}
+<div class="card">
+    <div class="card-header-with-actions">
+        <h3>Pending Student ID Generation</h3>
+        <div class="header-actions">
+            <div class="search-container">
+                <input type="text" id="search-pending" placeholder="Search pending..." class="form-input">
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table class="full-width-table" id="pending-enrollments">
+            <thead>
+                <tr>
+                    <th>Application ID</th>
+                    <th>Student Name</th>
+                    <th>Program</th>
+                    <th>Nationality</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for enrollment in enrollments %}
+                <tr>
+                    <td>{{ enrollment.app_id }}</td>
+                    <td>{{ enrollment.user.full_name }}</td>
+                    <td>{{ enrollment.program }}</td>
+                    <td>{{ enrollment.user.nationality }}</td>
+                    <td>
+                        <button class="btn primary generate-id-btn" 
+                                data-id="{{ enrollment.id }}"
+                                data-student="{{ enrollment.user.full_name }}"
+                                data-program="{{ enrollment.program }}"
+                                data-nationality="{{ enrollment.user.nationality }}">
+                            <i class="fas fa-id-card"></i> Generate ID
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No pending enrollments requiring ID generation.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Generate ID Modal -->
+<div id="generate-id-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-id-card"></i> Generate Student ID</h3>
+            <button class="close-modal btn-icon">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="confirmation-section">
+                <h4 class="mb-3">Student Information</h4>
+                <div id="student-info" class="info-grid"></div>
+                
+                <div class="prefix-section mt-4">
+                    <h4 class="mb-3">ID Configuration</h4>
+                    <div class="form-group">
+                        <label for="id-prefix" class="form-label">Custom Prefix (Optional):</label>
+                        <input type="text" 
+                               id="id-prefix" 
+                               class="form-input" 
+                               maxlength="5"
+                               placeholder="E.g., INT">
+                        <small class="form-text text-muted">Max 5 characters. Leave blank for default.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn outline close-modal">Cancel</button>
+            <button id="confirm-generate-id" class="btn primary">
+                <i class="fas fa-check"></i> Generate ID
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="card-header-with-actions">
+        <h3>Enrolled Students</h3>
+        <div class="header-actions">
+            <div class="search-container">
+                <input type="text" id="search-enrolled" placeholder="Search by ID, Name, Program..." class="form-input">
+            </div>
+            <select id="year-filter" class="form-input">
+                <option value="">All Years</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="table-container">
+        <table class="full-width-table" id="enrolled-students">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Program</th>
+                    <th>Nationality</th>
+                    <th>Enrollment Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application, student_id in enrolled_students %}
+                    <tr>
+                        <td>{{ student_id.student_id }}</td>
+                        <td>{{ application.user.full_name }}</td>
+                        <td>{{ application.program }}</td>
+                        <td>{{ application.user.nationality }}</td>
+                        <td>{{ student_id.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td><span class="status-badge green">Active</span></td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn view" onclick="viewStudentDetails('{{ student_id.student_id }}', '{{ application.user.full_name }}', '{{ application.program }}', '{{ application.user.nationality }}', '{{ student_id.created_at.strftime('%Y-%m-%d') }}', '{{ application.user.email }}', '{{ application.user.phone }}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="action-btn print" onclick="printStudentID('{{ student_id.student_id }}')">
+                                    <i class="fas fa-print"></i> Print ID
+                                </button>
+                                <button class="action-btn message" onclick="messageStudent('{{ application.user_id }}')">
+                                    <i class="fas fa-envelope"></i> Message
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No enrolled students found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Enrollment statistics -->
+<div class="card mt-6">
+    <div class="card-header">
+        <h3>Enrollment Statistics</h3>
+    </div>
+    
+    <div class="card-body">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div>
+                        <h3 class="stat-title">Total Enrollments</h3>
+                        <p class="stat-value" id="stat-total-enrolled">{{ enrolled_students|length }}</p>
+                    </div>
+                    <div class="stat-icon blue">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div>
+                        <h3 class="stat-title">Local Students</h3>
+                        <p class="stat-value">
+                            {% set local_count = 0 %}
+                            {% for app, _ in enrolled_students if app.user.nationality == 'Egyptian' %}
+                                {% set local_count = local_count + 1 %}
+                            {% endfor %}
+                            {{ local_count }}
+                        </p>
+                    </div>
+                    <div class="stat-icon green">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div>
+                        <h3 class="stat-title">International</h3>
+                        <p class="stat-value">
+                            {% set international_count = 0 %}
+                            {% for app, _ in enrolled_students if app.user.nationality != 'Egyptian' %}
+                                {% set international_count = international_count + 1 %}
+                            {% endfor %}
+                            {{ international_count }}
+                        </p>
+                    </div>
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-content">
+                    <div>
+                        <h3 class="stat-title">Pending IDs</h3>
+                        <p class="stat-value" id="stat-pending-ids">{{ enrollments|length }}</p>
+                    </div>
+                    <div class="stat-icon red">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-6">
+            <h4 class="mb-4">Enrollments by Program</h4>
+            <div class="table-container">
+                <table class="full-width-table">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th>Enrolled Count</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set programs = {} %}
+                        {% set total_enrolled = enrolled_students|length %}
+                        {% for app, _ in enrolled_students %}
+                            {% if app.program in programs %}
+                                {% set _ = programs.update({app.program: programs[app.program] + 1}) %}
+                            {% else %}
+                                {% set _ = programs.update({app.program: 1}) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% for program, count in programs.items()|sort %}
+                            <tr>
+                                <td>{{ program }}</td>
+                                <td>{{ count }}</td>
+                                <td>
+                                    {% if total_enrolled > 0 %}
+                                        {{ ((count / total_enrolled) * 100)|round(1) }}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center">No program data available.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Details Modal -->
+<div id="student-modal" class="modal hidden">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h3>Student Details</h3>
+            <button class="close-modal btn-icon">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <h4>Personal Information</h4>
+            <div id="student-details" class="info-grid mb-4"></div>
+            
+            <h4>Academic Information</h4>
+            <div id="academic-info" class="info-grid"></div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn outline close-modal">Close</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Ensure CSRF token is available
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+if (!csrfToken) {
+    console.error('CSRF token not found!');
+}
+
+// --- Generate ID Functionality ---
+class StudentIDGenerator {
+    constructor() {
+        this.modal = document.getElementById('generate-id-modal');
+        this.prefixInput = document.getElementById('id-prefix');
+        this.confirmBtn = document.getElementById('confirm-generate-id');
+        this.studentInfoDiv = document.getElementById('student-info');
+
+        if (!this.modal || !this.prefixInput || !this.confirmBtn || !this.studentInfoDiv) {
+            console.error('Generate ID Modal elements not found!');
+            return;
+        }
+
+        this.currentApplication = null;
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        const pendingTableBody = document.querySelector('#pending-enrollments tbody');
+        if (pendingTableBody) {
+            pendingTableBody.addEventListener('click', (e) => {
+                if (e.target && e.target.classList.contains('generate-id-btn')) {
+                    this.showModal(e.target);
+                }
+            });
+        }
+
+        this.modal.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => this.hideModal());
+        });
+
+        this.confirmBtn.addEventListener('click', (e) => this.generateID(e));
+
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) {
+                this.hideModal();
+            }
+        });
+    }
+
+    showModal(button) {
+        const data = {
+            id: button.dataset.id,
+            student: button.dataset.student,
+            program: button.dataset.program,
+            nationality: button.dataset.nationality
+        };
+
+        if (!data.id || !data.student || !data.program || !data.nationality) {
+            console.error('Missing data attributes on generate button:', button);
+            Swal.fire('Error', 'Could not load student data. Required attributes missing.', 'error');
+            return;
+        }
+
+        this.currentApplication = data;
+
+        this.studentInfoDiv.innerHTML = `
+            <div class="info-row">
+                <span class="info-label">App ID:</span>
+                <span class="info-value">${data.id}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Student Name:</span>
+                <span class="info-value">${data.student}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Program:</span>
+                <span class="info-value">${data.program}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nationality:</span>
+                <span class="info-value">${data.nationality}</span>
+            </div>
+        `;
+
+        this.prefixInput.value = '';
+        this.modal.classList.remove('hidden');
+        this.modal.style.display = 'flex';
+    }
+
+    hideModal() {
+        this.modal.classList.add('hidden');
+        this.modal.style.display = 'none';
+        this.prefixInput.value = '';
+        this.currentApplication = null;
+        this.confirmBtn.disabled = false;
+        this.confirmBtn.innerHTML = '<i class="fas fa-check"></i> Generate ID';
+    }
+
+    async generateID(event) {
+        event.preventDefault();
+
+        if (!this.currentApplication) {
+            Swal.fire('Error', 'No application selected or data missing.', 'error');
+            return;
+        }
+        if (!csrfToken) {
+            Swal.fire('Error', 'CSRF Token is missing. Cannot proceed.', 'error');
+            return;
+        }
+
+        const prefix = this.prefixInput.value.trim();
+        this.confirmBtn.disabled = true;
+        this.confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+        try {
+            const response = await fetch(`/admin/generate_student_id/${this.currentApplication.id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    prefix: prefix,
+                    program: this.currentApplication.program,
+                    nationality: this.currentApplication.nationality
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP error ${response.status}`);
+            }
+
+            if (data.success) {
+                const row = document.querySelector(`#pending-enrollments tbody .generate-id-btn[data-id="${this.currentApplication.id}"]`)?.closest('tr');
+                if (row) {
+                    row.remove();
+                }
+
+                this.updateStatsOnSuccess();
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'ID Generated!',
+                    text: data.message || `New Student ID: ${data.student_id}`,
+                    confirmButtonText: 'OK'
+                });
+
+                window.location.reload();
+            } else {
+                throw new Error(data.message || 'Failed to generate ID. Please check server logs.');
+            }
+
+        } catch (error) {
+            console.error('Error generating ID:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Generation Failed',
+                text: error.message || 'An unexpected error occurred. Please try again.',
+                confirmButtonText: 'OK'
+            });
+        } finally {
+            this.confirmBtn.disabled = false;
+            this.confirmBtn.innerHTML = '<i class="fas fa-check"></i> Generate ID';
+            this.hideModal();
+        }
+    }
+
+    updateStatsOnSuccess() {
+        const pendingCountEl = document.getElementById('stat-pending-ids');
+        const enrolledCountEl = document.getElementById('stat-total-enrolled');
+
+        if (pendingCountEl) {
+            const currentCount = parseInt(pendingCountEl.textContent) || 0;
+            pendingCountEl.textContent = Math.max(0, currentCount - 1);
+        }
+        if (enrolledCountEl) {
+            const currentCount = parseInt(enrolledCountEl.textContent) || 0;
+            enrolledCountEl.textContent = currentCount + 1;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const idGenerator = new StudentIDGenerator();
+});
+
+function filterTable(tableId, filters) {
+    const tableBody = document.getElementById(tableId)?.querySelector('tbody');
+    if (!tableBody) return;
+    const rows = tableBody.querySelectorAll('tr');
+
+    rows.forEach(row => {
+        let match = true;
+        for (const key in filters) {
+            if (filters[key] && !filters[key](row)) {
+                match = false;
+                break;
+            }
+        }
+        row.style.display = match ? '' : 'none';
+    });
+}
+
+const currentFilters = {
+    pending: { search: '', program: '' },
+    enrolled: { search: '', year: '' }
+};
+
+const searchPendingInput = document.getElementById('search-pending');
+if (searchPendingInput) {
+    searchPendingInput.addEventListener('keyup', function() {
+        currentFilters.pending.search = this.value.toLowerCase();
+        applyPendingFilters();
+    });
+}
+
+const searchEnrolledInput = document.getElementById('search-enrolled');
+if (searchEnrolledInput) {
+    searchEnrolledInput.addEventListener('keyup', function() {
+        currentFilters.enrolled.search = this.value.toLowerCase();
+        applyEnrolledFilters();
+    });
+}
+
+const yearFilterSelect = document.getElementById('year-filter');
+if (yearFilterSelect) {
+    yearFilterSelect.addEventListener('change', function() {
+        currentFilters.enrolled.year = this.value;
+        applyEnrolledFilters();
+    });
+}
+
+function applyPendingFilters() {
+    const filters = {
+        search: (row) => {
+            if (!currentFilters.pending.search) return true;
+            const appId = row.cells[0]?.textContent.toLowerCase() || '';
+            const student = row.cells[1]?.textContent.toLowerCase() || '';
+            const program = row.cells[2]?.textContent.toLowerCase() || '';
+            return appId.includes(currentFilters.pending.search) ||
+                   student.includes(currentFilters.pending.search) ||
+                   program.includes(currentFilters.pending.search);
+        }
+    };
+    filterTable('pending-enrollments', filters);
+}
+
+function applyEnrolledFilters() {
+    const filters = {
+        search: (row) => {
+            if (!currentFilters.enrolled.search) return true;
+            const studentId = row.cells[0]?.textContent.toLowerCase() || '';
+            const student = row.cells[1]?.textContent.toLowerCase() || '';
+            const program = row.cells[2]?.textContent.toLowerCase() || '';
+            return studentId.includes(currentFilters.enrolled.search) ||
+                   student.includes(currentFilters.enrolled.search) ||
+                   program.includes(currentFilters.enrolled.search);
+        },
+        year: (row) => {
+            if (!currentFilters.enrolled.year) return true;
+            const enrollmentDate = row.cells[4]?.textContent.trim() || '';
+            const year = enrollmentDate.split('-')[0];
+            return year === currentFilters.enrolled.year;
+        }
+    };
+    filterTable('enrolled-students', filters);
+}
+
+const studentModal = document.getElementById('student-modal');
+const studentDetailsDiv = document.getElementById('student-details');
+const academicInfoDiv = document.getElementById('academic-info');
+
+if (studentModal) {
+    studentModal.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            studentModal.classList.add('hidden');
+            studentModal.style.display = 'none';
+        });
+    });
+    studentModal.addEventListener('click', (e) => {
+        if (e.target === studentModal) {
+            studentModal.classList.add('hidden');
+            studentModal.style.display = 'none';
+        }
+    });
+}
+
+window.viewStudentDetails = function(studentId, name, program, nationality, enrollDate, email = 'N/A', phone = 'N/A') {
+    if (!studentModal || !studentDetailsDiv || !academicInfoDiv) {
+        console.error('Student details modal elements not found.');
+        return;
+    }
+
+    studentDetailsDiv.innerHTML = `
+        <div class="info-row">
+            <span class="info-label">Student ID:</span>
+            <span class="info-value">${studentId}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Name:</span>
+            <span class="info-value">${name}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">${email}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Phone:</span>
+            <span class="info-value">${phone}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Nationality:</span>
+            <span class="info-value">${nationality}</span>
+        </div>
+    `;
+
+    academicInfoDiv.innerHTML = `
+        <div class="info-row">
+            <span class="info-label">Program:</span>
+            <span class="info-value">${program}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Enrollment Date:</span>
+            <span class="info-value">${enrollDate}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Status:</span>
+            <span class="status-badge green">Active</span>
+        </div>
+    `;
+
+    studentModal.classList.remove('hidden');
+    studentModal.style.display = 'flex';
+};
+
+window.printStudentID = function(studentId) {
+    console.log(`Initiating print for student ID: ${studentId}`);
+    Swal.fire({
+        title: 'Print Student ID',
+        text: `Printing functionality for ${studentId} is not fully implemented in this demo.`,
+        icon: 'info'
+    });
+};
+
+window.messageStudent = function(userId) {
+    console.log(`Initiating message to user ID: ${userId}`);
+    Swal.fire({
+        title: 'Message Student',
+        text: `Messaging functionality for user ${userId} is not fully implemented in this demo.`,
+        icon: 'info'
+    });
+};
+</script>
+
+<style>
+.confirmation-section {
+    padding: 1rem 1.5rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.info-grid .info-label {
+    font-weight: 500;
+    color: #495057;
+}
+.info-grid .info-value {
+    color: #212529;
+}
+
+.prefix-section {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #495057;
+}
+
+.form-text.text-muted {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.modal-content.large {
+    max-width: 800px;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة تحكم المشرف - بوابة الجامعة{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- الشريط الجانبي -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h1 id="sidebar-title">بوابة المشرف</h1>
+            <button id="toggle-sidebar" class="btn-icon">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-text">لوحة التحكم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_applications') }}" class="nav-link {% if request.endpoint == 'admin_applications' %}active{% endif %}" id="admin-applications-link">
+                        <i class="fas fa-file-alt"></i>
+                        <span class="nav-text">الطلبات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_enrollments') }}" class="nav-link {% if request.endpoint == 'admin_enrollments' %}active{% endif %}">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="nav-text">التسجيلات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_certificates') }}" class="nav-link {% if request.endpoint == 'admin_certificates' %}active{% endif %}">
+                        <i class="fas fa-award"></i>
+                        <span class="nav-text">الشهادات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_projects') }}" class="nav-link {% if request.endpoint == 'admin_projects' %}active{% endif %}">
+                        <i class="fas fa-project-diagram"></i>
+                        <span class="nav-text">المشاريع</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_news') }}" class="nav-link {% if request.endpoint == 'admin_news' %}active{% endif %}">
+                        <i class="fas fa-newspaper"></i>
+                        <span class="nav-text">الأخبار والإعلانات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_tickets') }}" class="nav-link {% if request.endpoint == 'admin_tickets' %}active{% endif %}">
+                        <i class="fas fa-comment"></i>
+                        <span class="nav-text">تذاكر الدعم</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_settings') }}" class="nav-link {% if request.endpoint == 'admin_settings' %}active{% endif %}">
+                        <i class="fas fa-cog"></i>
+                        <span class="nav-text">الإعدادات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_students') }}" class="nav-link {% if request.endpoint == 'admin_students' %}active{% endif %}">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>الطلاب</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="logout-container">
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="nav-text">تسجيل الخروج</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        <!-- الرأس العلوي -->
+        <header class="header">
+            <div class="header-content">
+                <h2 id="page-title">{% block page_title %}لوحة التحكم{% endblock %}</h2>
+                <div class="header-actions">
+                    <div class="notification-container">
+                        <button id="notification-btn" class="btn-icon">
+                            <i class="fas fa-bell"></i>
+                            {% set unread_notifications = current_user.notifications|selectattr('read', 'equalto', false)|list %}
+                            {% if unread_notifications %}
+                                <span id="notification-badge" class="notification-badge">{{ unread_notifications|length }}</span>
+                            {% endif %}
+                        </button>
+
+                        <!-- لوحة الإشعارات -->
+                        <div id="notifications-panel" class="notifications-panel hidden">
+                            <div class="notifications-header">
+                                <h3>الإشعارات</h3>
+                                <button id="mark-all-read" class="btn-text">وضع علامة مقروء على الكل</button>
+                            </div>
+                            <div class="notifications-list">
+                                {% for notification in current_user.notifications|sort(attribute='created_at', reverse=true)|slice(0, 10) %}
+                                    <div class="notification-item {% if not notification.read %}unread{% endif %}">
+                                        <p>{{ notification.message }}</p>
+                                        <p class="notification-time">{{ notification.created_at|time_ago }}</p>
+                                    </div>
+                                {% else %}
+                                    <div class="notification-item">
+                                        <p>لا توجد إشعارات</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="user-container">
+                        <div class="avatar">AD</div> <!-- يمكنك تغيير هذا إذا لزم الأمر -->
+                        <span id="user-name" class="user-name">{{ current_user.full_name }}</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- منطقة المحتوى الرئيسي -->
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">
+                            <p>{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block main_content %}
+            <!-- سيتم إدراج المحتوى الرئيسي هنا -->
+            {% endblock %}
+        </main>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+<!-- تضمين نصوص الإشعارات المشتركة -->
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard-notifications.js') }}"></script>
+
+<script>
+    // منطق تبديل الشريط الجانبي (إذا لزم الأمر، أو انقله إلى ملف admin.js منفصل)
+    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('collapsed'); // فئة مثال
+        document.querySelector('.main-content').classList.toggle('expanded'); // فئة مثال
+    });
+
+    // ملاحظة: منطق mark-all-read موجود الآن داخل notifications.js
+    // قم بإزالة كتلة النص البرمجي المكررة أدناه إذا كانت موجودة.
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+{% block page_scripts %}{% endblock %} <!-- إضافة كتلة للنصوص البرمجية الخاصة بالصفحة -->
+{% endblock %}

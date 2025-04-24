@@ -1,0 +1,352 @@
+{% extends "student_layout.html" %}
+
+{% block page_title %}لوحة التحكم{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* تنسيق الشريط الجانبي */
+    .sidebar-profile {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border-radius: 12px;
+        margin: 0 1rem 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0 auto 1rem;
+    }
+    
+    .sidebar-name {
+        color: white;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+    
+    .sidebar-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .info-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .info-value {
+        color: white;
+        font-weight: 500;
+    }
+    
+    .info-value.small {
+        font-size: 0.875rem;
+    }
+    
+    .gpa-badge {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    
+    .sidebar-divider {
+        border-color: rgba(255, 255, 255, 0.1);
+        margin: 1rem 0;
+    }
+    
+    /* إشعار الشهادات */
+    .alert.success {
+        position: relative;
+    }
+    
+    .close-alert {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        color: #10b981;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    
+    .close-alert:hover {
+        color: #047857;
+    }
+
+    /* إصلاح لوحة الإشعارات */
+    .notifications-panel {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        margin-top: 5px;
+        width: min(320px, 90vw);  /* Use the smaller of 320px or 90% of viewport width */
+        max-width: 90vw;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        overflow: hidden;
+        max-height: 80vh;  /* Limit height to 80% of viewport height */
+        overflow-y: auto;  /* Add vertical scrolling if needed */
+    }
+    
+    /* Ensure the panel doesn't go off-screen on small screens */
+    @media (max-width: 576px) {
+        .notifications-panel {
+            right: -50px;  /* Adjust the position on very small screens */
+            width: 280px;
+        }
+    }
+    
+    .notifications-panel.hidden {
+        display: none;
+    }
+    
+    .notifications-header {
+        padding: 12px 15px;
+        background-color: #4f46e5;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        text-align: left;
+    }
+    
+    .notifications-list {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    
+    .notification-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.2s;
+        text-align: left;
+    }
+    
+    .notification-item:hover {
+        background-color: #f9fafb;
+    }
+    
+    .notification-item.unread {
+        background-color: #eff6ff;
+    }
+    
+    .notification-time {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 4px;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="dashboard-container">
+    <!-- محتوى لوحة التحكم الرئيسية -->
+    <div class="dashboard-main">
+        <div class="welcome-card">
+            <h3>مرحباً، {{ current_user.full_name }}!</h3>
+            
+            {% if payment_required %}
+            <div class="alert warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <h4>الدفع مطلوب</h4>
+                    <p>تمت الموافقة على طلبك! يرجى متابعة الدفع لإكمال التسجيل.</p>
+                    {% for application in applications if application.status == 'Documents Approved' and application.payment_status == 'Pending' %}
+                        {% if loop.first %}
+                        <a href="{{ url_for('student_payment', app_id=application.id) }}" class="btn primary mt-3">إكمال الدفع</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if certificate_ready %}
+            <div class="alert success" id="certificate-notification">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <h4>الشهادة جاهزة</h4>
+                    <p>شهادتك جاهزة للاستلام! يرجى زيارة مكتب الإدارة لاستلامها.</p>
+                </div>
+                <button class="close-alert" onclick="dismissCertificateNotification()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>حالة الطلب</h3>
+                </div>
+                <div class="card-body">
+                    {% if applications %}
+                        {% set latest_app = applications|sort(attribute='date_submitted', reverse=true)|first %}
+                        <div class="info-row">
+                            <span class="info-label">البرنامج:</span>
+                            <span class="info-value">{{ latest_app.program }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">الحالة:</span>
+                            <span class="status-badge 
+                                {% if latest_app.status == 'Pending Review' %}yellow
+                                {% elif latest_app.status == 'Documents Approved' %}green
+                                {% elif latest_app.status == 'Documents Rejected' %}red
+                                {% endif %}">
+                                {{ latest_app.status }}
+                            </span>
+                        </div>
+                        <div class="info-row mb-4">
+                            <span class="info-label">الدفع:</span>
+                            <span class="status-badge 
+                                {% if latest_app.payment_status == 'Pending' %}yellow
+                                {% elif latest_app.payment_status == 'Paid' %}green
+                                {% endif %}">
+                                {{ latest_app.payment_status }}
+                            </span>
+                        </div>
+                        
+                        {% if latest_app.status == 'Documents Approved' and latest_app.payment_status == 'Pending' %}
+                            <a href="{{ url_for('student_payment', app_id=latest_app.id) }}" class="btn primary full-width">الدفع الآن</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-muted">لم يتم العثور على طلبات</p>
+                            <a href="{{ url_for('student_new_application') }}" class="btn primary mt-3">تقديم طلب جديد</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>المستندات</h3>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                        <ul class="document-list">
+                            {% for document in documents|sort(attribute='uploaded_at', reverse=true)|slice(0, 3) %}
+                                <li class="document-item">
+                                    <span>{{ document.name }}</span>
+                                    <span class="status-badge 
+                                        {% if document.status == 'Uploaded' %}blue
+                                        {% elif document.status == 'Verified' %}green
+                                        {% elif document.status == 'Rejected' %}red
+                                        {% endif %}">
+                                        {{ document.status }}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <a href="{{ url_for('student_upload_document') }}" class="btn primary full-width mt-4">رفع مستند جديد</a>
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-muted">لم يتم العثور على مستندات</p>
+                            <a href="{{ url_for('student_upload_document') }}" class="btn primary mt-3">رفع مستند</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3>تذاكر الدعم الفني</h3>
+                </div>
+                <div class="card-body">
+                    {% if tickets %}
+                        <ul class="ticket-list">
+                            {% for ticket in tickets|sort(attribute='created_at', reverse=true)|slice(0, 3) %}
+                                <li class="ticket-item">
+                                    <div>
+                                        <p class="ticket-subject">{{ ticket.subject }}</p>
+                                        <p class="ticket-date">{{ ticket.created_at.strftime('%Y-%m-%d') }}</p>
+                                    </div>
+                                    <span class="status-badge 
+                                        {% if ticket.status == 'Open' %}red
+                                        {% elif ticket.status == 'In Progress' %}yellow
+                                        {% elif ticket.status == 'Closed' %}green
+                                        {% endif %}">
+                                        {{ ticket.status }}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <a href="{{ url_for('student_new_ticket') }}" class="btn primary full-width mt-4">إنشاء تذكرة دعم جديدة</a>
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-muted">لا توجد تذاكر دعم</p>
+                            <a href="{{ url_for('student_new_ticket') }}" class="btn primary mt-3">إنشاء تذكرة</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- Include the shared notification scripts -->
+<script src="{{ url_for('static', filename='js/dashboard-notifications.js') }}"></script>
+
+<script>
+    // Remove height limitations from cards for dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.card-body').forEach(function(cardBody) {
+            cardBody.style.height = 'auto';
+            cardBody.style.maxHeight = 'none';
+        });
+
+        // Certificate notification dismissal
+        const certificateNotification = document.getElementById('certificate-notification');
+        if (certificateNotification) {
+            localStorage.getItem('certificateDismissed') === 'true'
+                ? certificateNotification.style.display = 'none'
+                : null;
+        }
+
+        // Notification logic is now handled by notifications.js and dashboard-notifications.js
+        // Remove the redundant toggle and mark-as-read logic from here.
+
+    });
+
+    // Function to dismiss certificate notification
+    function dismissCertificateNotification() {
+        const notification = document.getElementById('certificate-notification');
+        if (notification) {
+            notification.style.display = 'none';
+            localStorage.setItem('certificateDismissed', 'true');
+        }
+    }
+</script>
+{% endblock %}

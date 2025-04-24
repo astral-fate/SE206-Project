@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+
+{% block title %}Register - University Portal{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-box register-box">
+        <div class="text-center mb-3">
+            <h2 class="fw-bold mb-1">التسجيل</h2>
+            <p class="text-muted small">أنشئ حساب جديد للوصول إلى بوابة الجامعة</p>
+        </div>
+        <form method="POST" action="{{ url_for('register') }}" class="needs-validation" novalidate>
+            {{ form.csrf_token }}
+            
+            <!-- Full Name -->
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="text" class="form-control" id="fullName" name="fullName" placeholder="الاسم الكامل" required>
+                <label for="fullName">
+                    <i class="fas fa-user me-2"></i>الاسم الكامل
+                </label>
+                <div class="invalid-feedback">
+                    يرجى إدخال الاسم الكامل
+                </div>
+            </div>
+            
+            <!-- Email -->
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                <label for="email">
+                    <i class="fas fa-envelope me-2"></i>البريد الإلكتروني
+                </label>
+                <div class="invalid-feedback">
+                    يرجى إدخال بريد إلكتروني صحيح
+                </div>
+            </div>
+            
+            <!-- Password -->
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="password" class="form-control" id="password" name="password" placeholder="كلمة المرور" required>
+                <label for="password">
+                    <i class="fas fa-lock me-2"></i>كلمة المرور
+                </label>
+                <div class="invalid-feedback">
+                    يرجى إدخال كلمة المرور
+                </div>
+            </div>
+            
+            <!-- Confirm Password -->
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="تأكيد كلمة المرور" required>
+                <label for="confirmPassword">
+                    <i class="fas fa-lock me-2"></i>تأكيد كلمة المرور
+                </label>
+                <div class="invalid-feedback">
+                    يرجى تأكيد كلمة المرور
+                </div>
+            </div>
+            
+            <!-- Phone -->
+            <div class="form-floating mb-3 rtl-input-group">
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="رقم الهاتف">
+                <label for="phone">
+                    <i class="fas fa-phone me-2"></i>رقم الهاتف
+                </label>
+            </div>
+            
+            <!-- Gender -->
+            <div class="mb-3 rtl-input-group">
+                <label class="form-label d-block">الجنس</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="genderMale" value="male" checked>
+                    <label class="form-check-label" for="genderMale">ذكر</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="female">
+                    <label class="form-check-label" for="genderFemale">أنثى</label>
+                </div>
+            </div>
+            
+            <!-- Nationality Dropdown -->
+            <div class="form-floating mb-3 rtl-input-group">
+                <select class="form-select" id="nationality" name="nationality" required>
+                    <option value="" selected disabled>اختر الجنسية</option>
+                    <option value="Egyptian">مصري</option>
+                    <option value="Afghan">أفغاني</option>
+                    <option value="Albanian">ألباني</option>
+                    <option value="Algerian">جزائري</option>
+                    <option value="American">أمريكي</option>
+                    <option value="Andorran">أندوري</option>
+                    <option value="Angolan">أنغولي</option>
+                    <option value="Argentine">أرجنتيني</option>
+                    <option value="Armenian">أرميني</option>
+                    <option value="Australian">أسترالي</option>
+                    <option value="Austrian">نمساوي</option>
+                    <option value="Azerbaijani">أذربيجاني</option>
+                    <option value="Bahamian">باهامي</option>
+                    <option value="Bahraini">بحريني</option>
+                    <option value="Bangladeshi">بنغلاديشي</option>
+                    <option value="Barbadian">باربادوسي</option>
+                    <option value="Belarusian">بيلاروسي</option>
+                    <option value="Belgian">بلجيكي</option>
+                    <option value="Belizean">بليزي</option>
+                    <option value="Beninese">بنيني</option>
+                    <option value="Bhutanese">بوتاني</option>
+                    <option value="Bolivian">بوليفي</option>
+                    <option value="Brazilian">برازيلي</option>
+                    <option value="British">بريطاني</option>
+                    <option value="Bruneian">بروناي</option>
+                    <option value="Bulgarian">بلغاري</option>
+                    <option value="Burkinabe">بوركيني</option>
+                    <option value="Burmese">بورمي</option>
+                    <option value="Burundian">بوروندي</option>
+                    <option value="Cambodian">كمبودي</option>
+                    <option value="Cameroonian">كاميروني</option>
+                    <option value="Canadian">كندي</option>
+                    <option value="Cape Verdean">الرأس الأخضر</option>
+                    <option value="Chadian">تشادي</option>
+                    <option value="Chilean">تشيلي</option>
+                    <option value="Chinese">صيني</option>
+                    <option value="Colombian">كولومبي</option>
+                    <option value="Comoran">جزر القمر</option>
+                    <option value="Congolese">كونغولي</option>
+                    <option value="Costa Rican">كوستاريكي</option>
+                    <option value="Croatian">كرواتي</option>
+                    <option value="Cuban">كوبي</option>
+                    <option value="Cypriot">قبرصي</option>
+                    <option value="Czech">تشيكي</option>
+                    <option value="Danish">دنماركي</option>
+                    <option value="Djiboutian">جيبوتي</option>
+                    <option value="Dominican">دومينيكي</option>
+                    <option value="Dutch">هولندي</option>
+                    <option value="Ecuadorian">إكوادوري</option>
+                    <option value="Emirati">إماراتي</option>
+                    <option value="Equatorial Guinean">غينيا الاستوائية</option>
+                    <option value="Eritrean">إريتري</option>
+                    <option value="Estonian">إستوني</option>
+                    <option value="Ethiopian">إثيوبي</option>
+                    <option value="Fijian">فيجي</option>
+                    <option value="Filipino">فلبيني</option>
+                    <option value="Finnish">فنلندي</option>
+                    <option value="French">فرنسي</option>
+                    <option value="Gabonese">غابوني</option>
+                    <option value="Gambian">غامبي</option>
+                    <option value="Georgian">جورجي</option>
+                    <option value="German">ألماني</option>
+                    <option value="Ghanaian">غاني</option>
+                    <option value="Greek">يوناني</option>
+                    <option value="Grenadian">غرينادي</option>
+                    <option value="Guatemalan">غواتيمالي</option>
+                    <option value="Guinean">غيني</option>
+                    <option value="Guyanese">غياني</option>
+                    <option value="Haitian">هايتي</option>
+                    <option value="Honduran">هندوراسي</option>
+                    <option value="Hungarian">مجري</option>
+                    <option value="Icelandic">أيسلندي</option>
+                    <option value="Indian">هندي</option>
+                    <option value="Indonesian">إندونيسي</option>
+                    <option value="Iranian">إيراني</option>
+                    <option value="Iraqi">عراقي</option>
+                    <option value="Irish">أيرلندي</option>
+                    <option value="Israeli">إسرائيلي</option>
+                    <option value="Italian">إيطالي</option>
+                    <option value="Ivorian">ساحل العاج</option>
+                    <option value="Jamaican">جامايكي</option>
+                    <option value="Japanese">ياباني</option>
+                    <option value="Jordanian">أردني</option>
+                    <option value="Kazakhstani">كازاخستاني</option>
+                    <option value="Kenyan">كيني</option>
+                    <option value="Kuwaiti">كويتي</option>
+                    <option value="Kyrgyz">قيرغيزستان</option>
+                    <option value="Laotian">لاوسي</option>
+                    <option value="Latvian">لاتفي</option>
+                    <option value="Lebanese">لبناني</option>
+                    <option value="Liberian">ليبيري</option>
+                    <option value="Libyan">ليبي</option>
+                    <option value="Lithuanian">ليتواني</option>
+                    <option value="Luxembourgish">لوكسمبورغي</option>
+                    <option value="Macedonian">مقدوني</option>
+                    <option value="Malagasy">مدغشقر</option>
+                    <option value="Malawian">مالاوي</option>
+                    <option value="Malaysian">ماليزي</option>
+                    <option value="Maldivian">مالديفي</option>
+                    <option value="Malian">مالي</option>
+                    <option value="Maltese">مالطي</option>
+                    <option value="Mauritanian">موريتاني</option>
+                    <option value="Mauritian">موريشيوس</option>
+                    <option value="Mexican">مكسيكي</option>
+                    <option value="Moldovan">مولدوفي</option>
+                    <option value="Monacan">موناكو</option>
+                    <option value="Mongolian">منغولي</option>
+                    <option value="Montenegrin">الجبل الأسود</option>
+                    <option value="Moroccan">مغربي</option>
+                    <option value="Mozambican">موزمبيقي</option>
+                    <option value="Namibian">ناميبي</option>
+                    <option value="Nepalese">نيبالي</option>
+                    <option value="New Zealander">نيوزيلندي</option>
+                    <option value="Nicaraguan">نيكاراغوا</option>
+                    <option value="Nigerian">نيجيري</option>
+                    <option value="North Korean">كوري شمالي</option>
+                    <option value="Norwegian">نرويجي</option>
+                    <option value="Omani">عماني</option>
+                    <option value="Pakistani">باكستاني</option>
+                    <option value="Panamanian">بنمي</option>
+                    <option value="Papua New Guinean">بابوا غينيا الجديدة</option>
+                    <option value="Paraguayan">باراغواي</option>
+                    <option value="Peruvian">بيروفي</option>
+                    <option value="Polish">بولندي</option>
+                    <option value="Portuguese">برتغالي</option>
+                    <option value="Qatari">قطري</option>
+                    <option value="Romanian">روماني</option>
+                    <option value="Russian">روسي</option>
+                    <option value="Rwandan">رواندي</option>
+                    <option value="Saudi">سعودي</option>
+                    <option value="Senegalese">سنغالي</option>
+                    <option value="Serbian">صربي</option>
+                    <option value="Singaporean">سنغافوري</option>
+                    <option value="Slovak">سلوفاكي</option>
+                    <option value="Slovenian">سلوفيني</option>
+                    <option value="Somali">صومالي</option>
+                    <option value="South African">جنوب أفريقي</option>
+                    <option value="South Korean">كوري جنوبي</option>
+                    <option value="Spanish">إسباني</option>
+                    <option value="Sri Lankan">سريلانكي</option>
+                    <option value="Sudanese">سوداني</option>
+                    <option value="Swedish">سويدي</option>
+                    <option value="Swiss">سويسري</option>
+                    <option value="Syrian">سوري</option>
+                    <option value="Taiwanese">تايواني</option>
+                    <option value="Tajik">طاجيكي</option>
+                    <option value="Tanzanian">تنزاني</option>
+                    <option value="Thai">تايلاندي</option>
+                    <option value="Togolese">توغو</option>
+                    <option value="Tunisian">تونسي</option>
+                    <option value="Turkish">تركي</option>
+                    <option value="Turkmen">تركماني</option>
+                    <option value="Ugandan">أوغندي</option>
+                    <option value="Ukrainian">أوكراني</option>
+                    <option value="Uruguayan">أوروغواي</option>
+                    <option value="Uzbekistani">أوزبكستاني</option>
+                    <option value="Venezuelan">فنزويلي</option>
+                    <option value="Vietnamese">فيتنامي</option>
+                    <option value="Welsh">ويلزي</option>
+                    <option value="Yemeni">يمني</option>
+                    <option value="Zambian">زامبي</option>
+                    <option value="Zimbabwean">زيمبابوي</option>
+                </select>
+                <label for="nationality">
+                    <i class="fas fa-globe me-2"></i>الجنسية
+                </label>
+                <div class="invalid-feedback">
+                    يرجى اختيار الجنسية
+                </div>
+            </div>
+            
+            <!-- Military Service Status - for Egyptian males only -->
+            <div id="military-service-container" class="mb-3 rtl-input-group" style="display: none;">
+                <label class="form-label d-block">الخدمة العسكرية</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="militaryStatus" id="militaryCompleted" value="completed">
+                    <label class="form-check-label" for="militaryCompleted">أكملت الخدمة</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="militaryStatus" id="militaryExempted" value="exempted">
+                    <label class="form-check-label" for="militaryExempted">معفى</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="militaryStatus" id="militaryPostponed" value="postponed">
+                    <label class="form-check-label" for="militaryPostponed">مؤجل</label>
+                </div>
+            </div>
+            
+            <!-- Education -->
+            <div class="form-floating mb-4 rtl-input-group">
+                <select class="form-select" id="education" name="education" required>
+                    <option value="" selected disabled>اختر المؤهل العلمي</option>
+                    <option value="Bachelor's Degree">بكالوريوس</option>
+                    <option value="Master's Degree">ماجستير</option>
+                    <option value="PhD">دكتوراه</option>
+                    <option value="Diploma">دبلوم</option>
+                </select>
+                <label for="education">
+                    <i class="fas fa-graduation-cap me-2"></i>المؤهل العلمي
+                </label>
+                <div class="invalid-feedback">
+                    يرجى اختيار المؤهل العلمي
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                <i class="fas fa-user-plus me-2"></i>تسجيل
+            </button>
+        </form>
+        <div class="text-center">
+            <p class="text-muted small mb-0">
+                لديك حساب بالفعل؟ 
+                <a href="{{ url_for('login') }}" class="text-primary fw-bold text-decoration-none">سجل دخول</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    /* Reset and full-page styles */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    /* Override any possible container styles from base template */
+    body > div, body > main, body > section {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+    /* Full page background */
+    .login-page {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        overflow-y: auto;
+    }
+    /* Login box styling */
+    .login-box {
+        width: 90%;
+        max-width: 400px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        margin: 2rem 0;
+    }
+    /* Make register box larger */
+    .register-box {
+        max-width: 450px;
+    }
+    /* RTL input styling */
+    .rtl-input-group {
+        direction: rtl;
+        text-align: right;
+    }
+    /* Form input and select styling */
+    .form-control, .form-select {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+    }
+    .form-floating > label {
+        right: 0;
+        left: auto;
+        padding-right: 1rem;
+    }
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        padding-right: 1rem;
+        padding-left: 3rem;
+    }
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label,
+    .form-floating > .form-select ~ label {
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    /* Form check (radio buttons) RTL styling */
+    .form-check {
+        padding-right: 1.5em;
+        padding-left: 0;
+        text-align: right;
+    }
+    
+    .form-check .form-check-input {
+        float: right;
+        margin-right: -1.5em;
+        margin-left: 0;
+    }
+    /* Button styling */
+    .btn-primary {
+        transition: all 0.3s ease;
+        background-color: #4a6cf7;
+        border-color: #4a6cf7;
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(74, 108, 247, 0.2);
+        background-color: #3a5ce5;
+        border-color: #3a5ce5;
+    }
+    
+    /* Form label general styling */
+    .form-label {
+        text-align: right;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Form validation
+    (function() {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                
+                // Check if password and confirm password match
+                const password = document.getElementById('password');
+                const confirmPassword = document.getElementById('confirmPassword');
+                if (password.value !== confirmPassword.value) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    confirmPassword.setCustomValidity('Passwords do not match');
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+                
+                form.classList.add('was-validated')
+            }, false)
+        });
+        
+        // Reset custom validity when typing in confirm password field    
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            this.setCustomValidity('');
+        });
+        
+        // Check password match when typing
+        document.getElementById('confirmPassword').addEventListener('keyup', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            if (password !== confirmPassword) {
+                this.setCustomValidity('Passwords do not match');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    })();
+    
+    // Force full page display
+    document.addEventListener('DOMContentLoaded', function() {
+        // Override any potential conflicting styles
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100%';
+        document.documentElement.style.overflow = 'auto';
+        document.documentElement.style.height = '100%';
+    });
+
+    // Show/hide military service status based on nationality and gender
+    document.getElementById('nationality').addEventListener('change', function() {
+        const nationality = this.value;
+        const genderMale = document.getElementById('genderMale').checked;
+        const militaryServiceContainer = document.getElementById('military-service-container');
+        
+        if (nationality === 'Egyptian' && genderMale) {
+            militaryServiceContainer.style.display = 'block';
+        } else {
+            militaryServiceContainer.style.display = 'none';
+        }
+    });
+
+    document.getElementById('genderMale').addEventListener('change', function() {
+        const nationality = document.getElementById('nationality').value;
+        const militaryServiceContainer = document.getElementById('military-service-container');
+        
+        if (nationality === 'Egyptian' && this.checked) {
+            militaryServiceContainer.style.display = 'block';
+        } else {
+            militaryServiceContainer.style.display = 'none';
+        }
+    });
+
+    document.getElementById('genderFemale').addEventListener('change', function() {
+        const militaryServiceContainer = document.getElementById('military-service-container');
+        militaryServiceContainer.style.display = 'none';
+    });
+</script>
+{% endblock %}
