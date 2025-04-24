@@ -904,7 +904,7 @@ def student_new_application():
                 program_name_display = program_info.get('name', '')
                 arabic_name = program_info.get('arabic_name')
                 
-                if arabic_name:
+                if (arabic_name):
                     program_name_display = f"{arabic_name} ({program_name_display})"
                 else:
                     program_name_display = f"{program_info.get('degree_type')} - {program_name_display}"
@@ -2242,85 +2242,85 @@ def admin_student_courses(user_id):
     # Get student
     student = User.query.get_or_404(user_id)
 
-    # Get student's university ID
+    # Get student's university ID and application/program info
     student_id_obj = StudentID.query.join(Application).filter(
         Application.user_id == user_id
+    ).options(
+        joinedload(StudentID.application).joinedload(Application.program_relation) # Eager load application and program
     ).first()
 
     if not student_id_obj:
         flash('Student has no university ID assigned.', 'warning')
         return redirect(url_for('admin_students'))
 
-    # Get application and program
     application = student_id_obj.application
-    program_name = application.program
+    program_name = application.program # Display name from application
+    program_db = application.program_relation # Actual Program object
 
     # Initialize courses list
-    courses = []
+    courses_data = []
 
-    # Parse program name to get degree type and program name
-    program_parts = program_name.split(' in ')
-    if len(program_parts) == 2:
-        degree_type = program_parts[0]
-        prog_name = program_parts[1]
+    try:
+        # --- Fetch ENROLLED courses directly for this student ---
+        enrolled_items = db.session.query(
+            Course, CourseEnrollment
+        ).join(
+            CourseEnrollment, Course.id == CourseEnrollment.course_id
+        ).filter(
+            CourseEnrollment.student_id == user_id
+        ).options(
+            joinedload(CourseEnrollment.course) # Eager load course details
+        ).order_by(
+            CourseEnrollment.academic_year.desc(),
+            CourseEnrollment.semester,
+            Course.code
+        ).all()
 
-        # Find program in database
-        program = Program.query.filter_by(
-            name=prog_name,
-            degree_type=degree_type
-        ).first()
+        enrolled_course_ids = set()
+        for course, enrollment in enrolled_items:
+            courses_data.append({
+                'course': course,
+                'semester': enrollment.semester, # Use semester from enrollment
+                'enrollment_status': enrollment.status,
+                'grade': enrollment.grade,
+                'grade_numeric': enrollment.grade_numeric,
+                'enrollment_id': enrollment.id
+            })
+            enrolled_course_ids.add(course.id)
 
-        if program:
-            try:
-                # Use raw SQL to get enrollments without relying on ORM columns
-                sql = text("""
-                    SELECT ce.id, ce.course_id, ce.grade, ce.grade_numeric, ce.status
-                    FROM course_enrollments ce
-                    WHERE ce.student_id = :student_id
-                """)
+        # --- Optionally, fetch courses defined for the program but NOT enrolled ---
+        # (This part can be added if you want admins to see potential courses too)
+        # if program_db:
+        #     program_course_relations = ProgramCourse.query.filter_by(
+        #         program_id=program_db.id
+        #     ).all()
+        #
+        #     for pc_relation in program_course_relations:
+        #         if pc_relation.course_id not in enrolled_course_ids:
+        #             course = db.session.get(Course, pc_relation.course_id)
+        #             if course and course.is_active:
+        #                 courses_data.append({
+        #                     'course': course,
+        #                     'semester': pc_relation.semester, # Use semester from ProgramCourse mapping
+        #                     'enrollment_status': 'Not Enrolled',
+        #                     'grade': None,
+        #                     'grade_numeric': None,
+        #                     'enrollment_id': None
+        #                 })
+        #
+        # # Sort the combined list if needed (e.g., by semester then code)
+        # courses_data.sort(key=lambda x: (x['semester'] or '', x['course'].code or ''))
 
-                result = db.session.execute(sql, {"student_id": user_id})
-
-                # Create a dict of enrollment data
-                enrollments_dict = {}
-
-                for row in result:
-                    enrollments_dict[row[1]] = {
-                        'id': row[0],
-                        'grade': row[2],
-                        'grade_numeric': row[3],
-                        'status': row[4]
-                    }
-
-                # Get all program courses using ProgramCourse model
-                program_course_relations = ProgramCourse.query.filter_by(
-                    program_id=program.id
-                ).all()
-
-                # Build courses list with enrollment info
-                for pc_relation in program_course_relations:
-                    course = db.session.get(Course, pc_relation.course_id)
-
-                    if course and course.is_active:
-                        enrollment = enrollments_dict.get(course.id)
-
-                        courses.append({
-                            'course': course,
-                            'semester': pc_relation.semester,
-                            'enrollment_status': enrollment['status'] if enrollment else 'Not Enrolled',
-                            'grade': enrollment['grade'] if enrollment else None,
-                            'grade_numeric': enrollment['grade_numeric'] if enrollment else None,
-                            'enrollment_id': enrollment['id'] if enrollment else None
-                        })
-            except Exception as e:
-                print(f"Error in admin_student_courses: {str(e)}")
-                # Continue with empty list if there's an error
+    except Exception as e:
+        app.logger.error(f"Error fetching courses for student {user_id} in admin view: {str(e)}", exc_info=True)
+        flash('Error loading course data for the student.', 'danger')
+        # Continue with potentially empty list
 
     return render_template('admin/student_courses.html',
                          student=student,
                          student_id=student_id_obj.student_id,
                          program=program_name,
-                         courses=courses)
+                         courses=courses_data) # Pass the unified list
 
 @app.route('/admin/update_grade', methods=['POST'])
 @login_required
@@ -2873,6 +2873,68 @@ def admin_application_details(application_id):
             'message': f'Error retrieving application details: {str(e)}'
         }), 500
 
+@app.route('/admin/send_message', methods=['POST'])
+@login_required
+def admin_send_message():
+    """Handles sending a message from admin to a student, creating a ticket."""
+    if not current_user.is_admin():
+        return jsonify({'success': False, 'message': 'Access denied'}), 403
+
+    try:
+        data = request.get_json()
+        student_id = data.get('user_id')
+        subject = data.get('subject')
+        message_text = data.get('message')
+
+        if not student_id or not subject or not message_text:
+            return jsonify({'success': False, 'message': 'Missing required fields (user_id, subject, message)'}), 400
+
+        student = User.query.get(student_id)
+        if not student or student.role != 'student':
+            return jsonify({'success': False, 'message': 'Student not found'}), 404
+
+        # Generate a unique ticket ID
+        ticket_count = Ticket.query.count() + 1
+        ticket_id_str = f"TKT-{ticket_count:04d}" # Use 4 digits for padding
+
+        # Create new ticket
+        new_ticket = Ticket(
+            ticket_id=ticket_id_str,
+            user_id=student.id,
+            subject=subject,
+            status='Open', # Start as Open
+            created_at=datetime.now(UTC)
+        )
+        db.session.add(new_ticket)
+        db.session.flush() # Get the ID before committing
+
+        # Add the message from the admin
+        admin_message = TicketMessage(
+            ticket_id=new_ticket.id,
+            sender='Admin',
+            message=message_text,
+            created_at=datetime.now(UTC)
+        )
+        db.session.add(admin_message)
+
+        # Create notification for the student
+        notification = Notification(
+            user_id=student.id,
+            message=f'New message from admin regarding: {subject}',
+            read=False,
+            created_at=datetime.now(UTC)
+        )
+        db.session.add(notification)
+
+        db.session.commit()
+        app.logger.info(f"Admin {current_user.id} sent message creating ticket {ticket_id_str} for student {student_id}")
+
+        return jsonify({'success': True, 'message': 'Message sent and new support ticket created.'})
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error sending message from admin: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': f'An internal error occurred: {str(e)}'}), 500
 
 if __name__ == '__main__':
     with app.app_context():
