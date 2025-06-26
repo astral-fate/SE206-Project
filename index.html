@@ -78,6 +78,98 @@
                 margin-bottom: 2rem; /* Spacing between cards on mobile */
             }
         }
+
+        /* Print-specific styles for A4 page suitability */
+        @media print {
+            /* Define A4 page size and margins */
+            @page {
+                size: A4; /* Sets the paper size to A4 */
+                margin: 2cm; /* Sets a 2cm margin on all sides */
+            }
+
+            body {
+                background: none; /* Remove gradient background for printing */
+                display: block; /* Reset flexbox display for print layout */
+                min-height: auto; /* Remove minimum height constraint */
+                padding: 0; /* Remove body padding */
+                margin: 0; /* Remove body margin */
+                font-size: 11pt; /* Adjust base font size for print legibility */
+            }
+
+            .container {
+                width: 100%; /* Ensure container takes full width of print area */
+                max-width: none; /* Remove max-width constraint */
+                padding: 0; /* Remove container padding */
+            }
+
+            header {
+                color: #333; /* Darker text for better print contrast */
+                margin-bottom: 1rem; /* Adjust header margin for print */
+            }
+
+            h1, h2, p {
+                color: #333; /* Ensure text is dark for print readability */
+                text-shadow: none; /* Remove text shadows */
+            }
+
+            h1 {
+                font-size: 28pt; /* Adjust heading size for print */
+            }
+
+            p {
+                font-size: 11pt; /* Adjust paragraph size for print */
+            }
+
+            .asset-cards-container {
+                flex-direction: row; /* Keep cards in a row for print if space allows */
+                flex-wrap: wrap;
+                justify-content: space-around; /* Distribute cards evenly */
+                gap: 1rem; /* Reduce gap for print layout */
+                margin-top: 1rem;
+            }
+
+            .asset-card {
+                background-color: #fff; /* Solid white background for print */
+                backdrop-filter: none; /* Remove blur effect */
+                box-shadow: none; /* Remove shadows for cleaner print */
+                transform: none; /* Remove hover transform */
+                transition: none; /* Disable transitions */
+                border: 1px solid #eee; /* Light border for card definition */
+                break-inside: avoid; /* Prevent cards from splitting across pages */
+                page-break-inside: avoid; /* Older property for page breaks */
+                padding: 1.5rem; /* Adjust padding for print */
+                max-width: 280px; /* Adjust max-width for print layout */
+                flex: 1 1 calc(33% - 1.5rem); /* Fine-tune responsive sizing for print */
+            }
+
+            .asset-card:hover {
+                transform: none; /* Ensure no transform on hover during print preview */
+                box-shadow: none; /* Ensure no shadow on hover during print preview */
+            }
+
+            .asset-icon {
+                color: #555; /* Darker icon color for print */
+                margin-bottom: 1rem; /* Adjust icon margin */
+            }
+
+            .button-link {
+                background-color: #f0f0f0; /* Light button background for print */
+                color: #333; /* Darker text for button */
+                border: 1px solid #ccc; /* Add a border to buttons */
+                text-decoration: none; /* Ensure links are not underlined by default browser styles */
+                padding: 0.6rem 1.5rem; /* Adjust button padding */
+                margin-top: 1rem; /* Adjust button margin */
+                box-shadow: none; /* Remove button shadow */
+                transform: none; /* Remove hover transform */
+            }
+
+            .button-link::after {
+                content: " (" attr(href) ")"; /* Show URL for print version */
+                font-size: 9pt;
+                color: #666;
+                word-break: break-all; /* Break long URLs */
+            }
+        }
     </style>
 </head>
 <body class="antialiased">
