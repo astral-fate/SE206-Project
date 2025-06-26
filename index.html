@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CU Platform - Project Assets</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Gradient background for visual appeal */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Card styling */
+        .asset-card {
+            background-color: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2.5rem; /* Increased padding */
+            flex: 1 1 calc(33% - 2rem); /* Responsive sizing for cards */
+            max-width: 350px; /* Max width for individual cards */
+        }
+
+        .asset-card:hover {
+            transform: translateY(-8px); /* Lift effect on hover */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .asset-icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1.5rem;
+            color: #764ba2; /* Icon color matching gradient */
+        }
+
+        .button-link {
+            background-color: #667eea;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 9999px; /* Pill shape */
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 1.5rem;
+            display: inline-block; /* Ensure padding works */
+        }
+
+        .button-link:hover {
+            background-color: #5a6ed0;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .asset-cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .asset-card {
+                width: 90%;
+                max-width: 400px;
+                margin-bottom: 2rem; /* Spacing between cards on mobile */
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Hero Section -->
+        <header class="text-center text-white mb-12">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 drop-shadow-lg">
+                CU Platform Project Assets
+            </h1>
+            <p class="text-lg md:text-xl opacity-90 max-w-2xl mx-auto drop-shadow">
+                Explore the different facets of the Cairo University Platform project – from the live deployment to the underlying code and development process.
+            </p>
+        </header>
+
+        <!-- Assets Grid -->
+        <main class="asset-cards-container flex flex-wrap justify-center gap-8">
+
+            <!-- Deployed Website Card -->
+            <div class="asset-card">
+                <!-- Globe Icon SVG -->
+                <svg class="asset-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20A14.5 14.5 0 0 0 12 2"></path>
+                    <path d="M2 12h20"></path>
+                </svg>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Deployed Website</h2>
+                <p class="text-gray-600 mb-6">Experience the live version of our platform, fully accessible and functional.</p>
+                <a href="https://www.cu-platform.com/" target="_blank" rel="noopener noreferrer" class="button-link">
+                    Visit Website
+                </a>
+            </div>
+
+            <!-- Source Code Card -->
+            <div class="asset-card">
+                <!-- GitHub Icon SVG (simplified) -->
+                <svg class="asset-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 3S18.73.23 12 3.89c-6.73-3.66-7.91-1.47-7.91-1.47A5.07 5.07 0 0 0 4 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                </svg>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Source Code (GitHub)</h2>
+                <p class="text-gray-600 mb-6">Dive into the project's codebase, contribute, or fork it on GitHub.</p>
+                <a href="https://github.com/astral-fate/cu-platform" target="_blank" rel="noopener noreferrer" class="button-link">
+                    View on GitHub
+                </a>
+            </div>
+
+            <!-- Notion Management System Card -->
+            <div class="asset-card">
+                <!-- Document/Note Icon SVG -->
+                <svg class="asset-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Project Management (Notion)</h2>
+                <p class="text-gray-600 mb-6">Explore our Notion workspace for project planning, tasks, and documentation.</p>
+                <a href="https://cairo-university-msc.notion.site/Cairo-University-Platform-1b674dd8a27e806f89b4c840136d398f" target="_blank" rel="noopener noreferrer" class="button-link">
+                    Access Notion
+                </a>
+            </div>
+
+        </main>
+    </div>
+</body>
+</html>
