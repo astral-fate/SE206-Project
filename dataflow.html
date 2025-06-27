@@ -1,0 +1,388 @@
+d<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CU Platform - Data Flow Diagram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling on the page itself */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Tailwind bg-gray-50 */
+        }
+        .diagram-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        #diagram-container {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+        #dfd-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .entity {
+            fill: #fef9c3; /* Yellow 100 */
+            stroke: #1f2937; /* Gray 800 */
+            stroke-width: 1.5;
+        }
+        .entity-text {
+            font-size: 14px;
+            font-weight: 600;
+            fill: #1f2937; /* Gray 800 */
+        }
+        .process-shape {
+            fill: #fef9c3; /* Yellow 100 */
+            stroke: #1f2937; /* Gray 800 */
+            stroke-width: 1.5;
+        }
+        .process-text, .process-number {
+            font-size: 14px;
+            font-weight: 600;
+            fill: #111827; /* Gray 900 */
+        }
+        .process-subtitle {
+             font-size: 12px;
+            font-weight: 500;
+            fill: #374151; /* Gray 700 */
+        }
+        .datastore-bg {
+             fill: #fef9c3; /* Yellow 100 */
+             stroke: #1f2937;
+             stroke-width: 1.5;
+        }
+        .datastore-compartment {
+            fill: #e5e7eb; /* Gray 200 */
+        }
+        .datastore-text {
+            font-size: 14px;
+            font-weight: 600;
+            fill: #1f2937; /* Gray 800 */
+        }
+        .flow-line {
+            stroke: #374151; /* Gray 700 */
+            stroke-width: 1;
+            fill: none;
+        }
+        .flow-text {
+            font-size: 11px;
+            fill: #1f2937; /* Gray 800 */
+            font-style: normal;
+        }
+        /* Style for highlighted elements */
+        .highlight .process-shape, .highlight .entity, .highlight .datastore-bg { 
+            fill: #fef08a; /* Yellow 200 */
+        }
+        .highlight .process-shape, .highlight .entity, .highlight .datastore-bg {
+            stroke: #dc2626; /* Red 600 */
+            stroke-width: 2;
+        }
+         .highlight .process-shape line, .highlight .datastore-bg line {
+            stroke: #dc2626;
+         }
+        .highlight .flow-line { 
+            stroke: #dc2626; /* Red 600 */
+            stroke-width: 2; 
+        }
+        .highlight .flow-text { 
+            fill: #dc2626; /* Red 600 */
+            font-weight: 600; 
+        }
+        #arrowhead-highlight polygon {
+            fill: #dc2626; /* Red 600 */
+        }
+        #arrowhead polygon {
+            fill: #374151; /* Gray 700 */
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-wrapper bg-white">
+        <div class="p-4 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800 text-center">CU Platform - Level 1 Data Flow Diagram</h1>
+            <p class="text-center text-gray-500 text-sm">This diagram shows the main processes and data flows within the student management system.</p>
+        </div>
+        <div id="diagram-container">
+            <svg id="dfd-svg" viewBox="0 0 1300 1000" preserveAspectRatio="xMidYMid meet">
+                <!-- Marker for arrowhead -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" />
+                    </marker>
+                    <marker id="arrowhead-highlight" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" />
+                    </marker>
+                </defs>
+
+                <!-- External Entities -->
+                <g id="entity-student" class="node" data-node-id="student">
+                    <rect x="50" y="470" width="160" height="60" rx="2" class="entity"/>
+                    <text x="130" y="505" text-anchor="middle" class="entity-text">Student</text>
+                </g>
+                <g id="entity-admin" class="node" data-node-id="admin">
+                    <rect x="1090" y="470" width="160" height="60" rx="2" class="entity"/>
+                    <text x="1170" y="505" text-anchor="middle" class="entity-text">Administrator</text>
+                </g>
+
+                <!-- Processes -->
+                <g id="process-1" class="node" data-node-id="p1">
+                    <rect x="520" y="50" width="260" height="80" rx="15" class="process-shape"/>
+                    <line x1="520" y1="80" x2="780" y2="80" class="process-shape"/>
+                    <line x1="560" y1="50" x2="560" y2="80" class="process-shape"/>
+                    <text x="540" y="70" text-anchor="middle" class="process-number">1</text>
+                    <text x="670" y="100" text-anchor="middle" class="process-text">Manage User Accounts</text>
+                    <text x="670" y="118" text-anchor="middle" class="process-subtitle">(Login, Register)</text>
+                </g>
+                <g id="process-2" class="node" data-node-id="p2">
+                    <rect x="520" y="200" width="260" height="80" rx="15" class="process-shape"/>
+                    <line x1="520" y1="230" x2="780" y2="230" class="process-shape"/>
+                    <line x1="560" y1="200" x2="560" y2="230" class="process-shape"/>
+                    <text x="540" y="220" text-anchor="middle" class="process-number">2</text>
+                    <text x="670" y="250" text-anchor="middle" class="process-text">Manage Applications</text>
+                    <text x="670" y="268" text-anchor="middle" class="process-subtitle">&amp; Enrollments</text>
+                </g>
+                <g id="process-3" class="node" data-node-id="p3">
+                    <rect x="520" y="350" width="260" height="80" rx="15" class="process-shape"/>
+                    <line x1="520" y1="380" x2="780" y2="380" class="process-shape"/>
+                    <line x1="560" y1="350" x2="560" y2="380" class="process-shape"/>
+                    <text x="540" y="370" text-anchor="middle" class="process-number">3</text>
+                    <text x="670" y="405" text-anchor="middle" class="process-text">Handle Support Tickets</text>
+                </g>
+                <g id="process-4" class="node" data-node-id="p4">
+                    <rect x="520" y="500" width="260" height="80" rx="15" class="process-shape"/>
+                    <line x1="520" y1="530" x2="780" y2="530" class="process-shape"/>
+                    <line x1="560" y1="500" x2="560" y2="530" class="process-shape"/>
+                    <text x="540" y="520" text-anchor="middle" class="process-number">4</text>
+                    <text x="670" y="550" text-anchor="middle" class="process-text">Process Payments</text>
+                        <text x="670" y="568" text-anchor="middle" class="process-subtitle">&amp; Certificates</text>
+                </g>
+                    <g id="process-5" class="node" data-node-id="p5">
+                    <rect x="520" y="650" width="260" height="80" rx="15" class="process-shape"/>
+                    <line x1="520" y1="680" x2="780" y2="680" class="process-shape"/>
+                    <line x1="560" y1="650" x2="560" y2="680" class="process-shape"/>
+                    <text x="540" y="670" text-anchor="middle" class="process-number">5</text>
+                    <text x="670" y="705" text-anchor="middle" class="process-text">Manage Documents</text>
+                </g>
+
+                <!-- Data Stores -->
+                <g id="datastore-users" class="node" data-node-id="ds1">
+                    <rect x="250" y="80" width="180" height="40" class="datastore-bg"/>
+                    <rect x="250" y="80" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="290" y1="80" x2="290" y2="120" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="270" y="105" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="360" y="105" text-anchor="middle" class="datastore-text">Users</text>
+                </g>
+                    <g id="datastore-apps" class="node" data-node-id="ds2">
+                    <rect x="250" y="230" width="180" height="40" class="datastore-bg"/>
+                    <rect x="250" y="230" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="290" y1="230" x2="290" y2="270" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="270" y="255" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="360" y="255" text-anchor="middle" class="datastore-text">Applications</text>
+                </g>
+                <g id="datastore-enroll" class="node" data-node-id="ds3">
+                    <rect x="870" y="230" width="180" height="40" class="datastore-bg"/>
+                    <rect x="870" y="230" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="910" y1="230" x2="910" y2="270" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="890" y="255" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="980" y="255" text-anchor="middle" class="datastore-text">Enrollments</text>
+                </g>
+                    <g id="datastore-tickets" class="node" data-node-id="ds4">
+                    <rect x="250" y="380" width="180" height="40" class="datastore-bg"/>
+                    <rect x="250" y="380" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="290" y1="380" x2="290" y2="420" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="270" y="405" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="360" y="405" text-anchor="middle" class="datastore-text">Tickets</text>
+                </g>
+                <g id="datastore-payments" class="node" data-node-id="ds5">
+                    <rect x="250" y="530" width="180" height="40" class="datastore-bg"/>
+                    <rect x="250" y="530" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="290" y1="530" x2="290" y2="570" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="270" y="555" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="360" y="555" text-anchor="middle" class="datastore-text">Payments</text>
+                </g>
+                    <g id="datastore-certs" class="node" data-node-id="ds6">
+                    <rect x="870" y="530" width="180" height="40" class="datastore-bg"/>
+                    <rect x="870" y="530" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="910" y1="530" x2="910" y2="570" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="890" y="555" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="980" y="555" text-anchor="middle" class="datastore-text">Certificates</text>
+                </g>
+                <g id="datastore-docs" class="node" data-node-id="ds7">
+                    <rect x="250" y="680" width="180" height="40" class="datastore-bg"/>
+                    <rect x="250" y="680" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="290" y1="680" x2="290" y2="720" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="270" y="705" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="360" y="705" text-anchor="middle" class="datastore-text">Documents</text>
+                </g>
+                <g id="datastore-content" class="node" data-node-id="ds8">
+                    <rect x="870" y="780" width="180" height="40" class="datastore-bg"/>
+                    <rect x="870" y="780" width="40" height="40" class="datastore-compartment"/>
+                    <line x1="910" y1="780" x2="910" y2="820" stroke="#1f2937" stroke-width="1.5"/>
+                    <text x="890" y="805" text-anchor="middle" class="datastore-text">D</text>
+                    <text x="980" y="805" text-anchor="middle" class="datastore-text">Content</text>
+                </g>
+
+                <!-- Data Flows -->
+                <!-- Student to Processes -->
+                <g class="flow" data-connections="student p1">
+                    <path d="M 210,480 C 300,380 400,180 520,110" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="380" y="270" class="flow-text">Login/Register Details</text>
+                </g>
+                <g class="flow" data-connections="student p2">
+                    <path d="M 210,475 C 350,380 420,280 520,250" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="360" y="345" class="flow-text">Application/Enrollment Request</text>
+                </g>
+                <g class="flow" data-connections="student p3">
+                    <path d="M 210,500 C 400,500 400,390 520,390" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="360" y="450" class="flow-text">Support Ticket Details</text>
+                </g>
+                <g class="flow" data-connections="student p4">
+                    <path d="M 210,515 C 350,580 420,580 520,550" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="360" y="575" class="flow-text">Payment/Certificate Request</text>
+                </g>
+                    <g class="flow" data-connections="student p5">
+                    <path d="M 210,520 C 300,620 400,720 520,690" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="380" y="620" class="flow-text">Document Upload</text>
+                </g>
+
+                <!-- Processes to Data Stores -->
+                <g class="flow" data-connections="p1 ds1">
+                    <path d="M 520,100 H 430" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="450" y="95" class="flow-text">User Data</text>
+                </g>
+                <g class="flow" data-connections="p2 ds2">
+                    <path d="M 520,250 H 430" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="440" y="245" class="flow-text">Application Data</text>
+                </g>
+                <g class="flow" data-connections="p2 ds3">
+                    <path d="M 780,250 H 870" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="795" y="245" class="flow-text">Enrollment Data</text>
+                </g>
+                <g class="flow" data-connections="p3 ds4">
+                        <path d="M 520,400 H 430" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="455" y="395" class="flow-text">Ticket Data</text>
+                </g>
+                <g class="flow" data-connections="p4 ds5">
+                    <path d="M 520,550 H 430" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="450" y="545" class="flow-text">Payment Data</text>
+                </g>
+                <g class="flow" data-connections="p4 ds6">
+                    <path d="M 780,550 H 870" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="795" y="545" class="flow-text">Certificate Data</text>
+                </g>
+                    <g class="flow" data-connections="p5 ds7">
+                    <path d="M 520,700 H 430" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="445" y="695" class="flow-text">Document Data</text>
+                </g>
+
+                <!-- Admin to Processes -->
+                <g class="flow" data-connections="admin p1">
+                    <path d="M 1090,480 C 1000,380 900,180 780,110" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="920" y="270" text-anchor="end" class="flow-text">User Management Actions</text>
+                </g>
+                <g class="flow" data-connections="admin p2">
+                    <path d="M 1090,475 C 950,380 880,280 780,250" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="940" y="345" text-anchor="end" class="flow-text">Application/Enrollment Mgmt</text>
+                </g>
+                <g class="flow" data-connections="admin p3">
+                    <path d="M 1090,500 C 900,500 900,390 780,390" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="940" y="450" text-anchor="end" class="flow-text">Ticket Management</text>
+                </g>
+                <g class="flow" data-connections="p5 ds8"> <!-- Admin to Content -->
+                    <path d="M 780,700 C 820,750 870,790 870,790" class="flow-line" marker-end="url(#arrowhead)"/>
+                        <text x="800" y="760" class="flow-text">Content Mgmt</text>
+                </g>
+                <g class="flow" data-connections="admin ds8">
+                        <path d="M 1090,520 C 1050,650 980,770 980,770" class="flow-line" marker-end="url(#arrowhead)"/>
+                </g>
+
+                <!-- Return Flows -->
+                <g class="flow" data-connections="p1 student">
+                    <path d="M 520,80 C 400,120 280,300 210,470" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="350" y="220" class="flow-text">Auth Status, Profile Data</text>
+                </g>
+                <g class="flow" data-connections="p3 admin">
+                    <path d="M 780,410 C 950,410 950,510 1090,510" class="flow-line" marker-end="url(#arrowhead)"/>
+                    <text x="930" y="465" text-anchor="end" class="flow-text">Ticket Info</text>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const nodes = document.querySelectorAll('.node');
+            const flows = document.querySelectorAll('.flow');
+
+            nodes.forEach(node => {
+                node.addEventListener('mouseover', () => {
+                    const nodeId = node.dataset.nodeId;
+                    highlightConnections(nodeId);
+                });
+                node.addEventListener('mouseout', () => {
+                    clearHighlights();
+                });
+            });
+
+            function highlightConnections(nodeId) {
+                // Dim all elements first
+                nodes.forEach(n => n.style.opacity = '0.3');
+                flows.forEach(f => f.style.opacity = '0.3');
+
+                // Find and highlight the node itself
+                const activeNode = document.querySelector(`.node[data-node-id='${nodeId}']`);
+                if (activeNode) {
+                    activeNode.style.opacity = '1';
+                    activeNode.classList.add('highlight');
+                }
+
+                // Find and highlight connected flows and nodes
+                flows.forEach(flow => {
+                    const connections = flow.dataset.connections.split(' ');
+                    if (connections.includes(nodeId)) {
+                        flow.style.opacity = '1';
+                        flow.classList.add('highlight');
+                        const line = flow.querySelector('.flow-line');
+                        if(line) line.setAttribute('marker-end', 'url(#arrowhead-highlight)');
+                        
+                        // Highlight the other nodes connected by this flow
+                        connections.forEach(connectedId => {
+                            if (connectedId !== nodeId) {
+                                const connectedNode = document.querySelector(`.node[data-node-id='${connectedId}']`);
+                                if (connectedNode) {
+                                    connectedNode.style.opacity = '1';
+                                    connectedNode.classList.add('highlight');
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            function clearHighlights() {
+                nodes.forEach(node => {
+                    node.style.opacity = '1';
+                    node.classList.remove('highlight');
+                });
+                flows.forEach(flow => {
+                    flow.style.opacity = '1';
+                    flow.classList.remove('highlight');
+                    const line = flow.querySelector('.flow-line');
+                    if(line) line.setAttribute('marker-end', 'url(#arrowhead)');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
